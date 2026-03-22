@@ -1,4 +1,4 @@
-const CACHE = 'kash-v3';
+const CACHE = 'kash-v4';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {

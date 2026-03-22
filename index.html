@@ -223,6 +223,21 @@
     .month-filter{font-size:.78rem;color:var(--text-muted);font-weight:500;}
 
     @media(max-width:360px){.balance-amount{font-size:2.3rem;}.tab{font-size:.65rem;padding:.45rem .2rem;}}
+
+    /* ── SCAN FAB ── */
+    .fab-scan{position:fixed;bottom:2.2rem;left:50%;margin-left:44px;z-index:100;display:flex;flex-direction:column;align-items:center;}
+    .fab-scan-btn{width:46px;height:46px;border-radius:50%;background:rgba(20,15,40,.96);border:1.5px solid rgba(124,107,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.15rem;box-shadow:0 4px 20px rgba(0,0,0,.45);transition:all .28s cubic-bezier(.34,1.56,.64,1);}
+    .fab-scan-btn:hover{transform:scale(1.12);border-color:var(--violet);}
+    .fab-scan-btn:active{transform:scale(.94);}
+    .fab-scan-lbl{margin-top:.35rem;font-size:.63rem;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+
+    /* ── OCR MODAL ── */
+    .ocr-img-preview{width:100%;max-height:170px;object-fit:contain;border-radius:12px;margin-bottom:.8rem;border:1px solid var(--border);background:rgba(255,255,255,.03);}
+    .ocr-progress{height:4px;background:rgba(124,107,255,.12);border-radius:100px;overflow:hidden;margin:.8rem 0 1rem;}
+    .ocr-progress-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--violet),var(--violet-light));width:0%;transition:width .35s ease;}
+    .scan-result-block{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.22);border-radius:14px;padding:.9rem 1rem;margin-bottom:1rem;}
+    .scan-result-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:600;margin-bottom:.45rem;}
+    .scan-result-val{font-size:.9rem;font-weight:500;color:var(--text);line-height:1.75;}
   </style>
 </head>
 <body>
@@ -404,6 +419,15 @@
   </div>
 </div>
 
+<!-- Hidden file input for receipt scanning -->
+<input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(event)">
+
+<!-- Scan Receipt FAB -->
+<div class="fab-scan hidden" id="fab-scan">
+  <button class="fab-scan-btn" onclick="openScanner()" title="Scanner un ticket">📷</button>
+  <div class="fab-scan-lbl">Scanner</div>
+</div>
+
 <!-- FAB Vocal -->
 <div class="fab hidden" id="fab">
   <button class="fab-btn" id="fab-btn" onclick="startVoice()">
@@ -413,6 +437,28 @@
     🎤
   </button>
   <div class="fab-label" id="fab-label">Parler</div>
+</div>
+
+<!-- ══ MODAL OCR SCAN ══ -->
+<div class="modal-overlay hidden center" id="modal-ocr" onclick="closeOcrModal(event)">
+  <div class="modal center" onclick="event.stopPropagation()">
+    <div class="modal-title">📷 Scan ticket caisse</div>
+    <img id="ocr-preview" class="ocr-img-preview hidden" src="" alt="Aperçu">
+    <div id="ocr-status" style="font-size:.86rem;color:var(--text-muted);text-align:center;">Chargement…</div>
+    <div class="ocr-progress"><div class="ocr-progress-bar" id="ocr-progress-bar"></div></div>
+    <div class="scan-result-block hidden" id="scan-result-block">
+      <div class="scan-result-label">Données extraites</div>
+      <div class="scan-result-val" id="scan-result-val">—</div>
+    </div>
+    <div class="modal-actions hidden" id="ocr-actions">
+      <button class="btn-cta" style="background:linear-gradient(135deg,var(--green),#22c55e);color:#071009;" onclick="confirmScan()">✅ Ajouter</button>
+      <button class="btn-ghost" onclick="editScan()">✏️ Modifier</button>
+      <button class="btn-ghost" style="color:var(--red);border-color:rgba(248,113,113,.3);" onclick="closeOcrModal()">❌ Annuler</button>
+    </div>
+    <div id="ocr-cancel-wrap" style="text-align:center;margin-top:.75rem;">
+      <button class="btn-ghost" onclick="closeOcrModal()">Annuler</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ MODAL VOICE CONFIRM ══ -->
@@ -579,11 +625,14 @@ function showScreen(n) {
     if (el) el.classList.add('hidden');
   });
   const fab = document.getElementById('fab');
+  const fabScan = document.getElementById('fab-scan');
   if (n === 'dashboard') {
     document.getElementById('dashboard').classList.remove('hidden');
     if (fab) fab.classList.remove('hidden');
+    if (fabScan) fabScan.classList.remove('hidden');
   } else {
     if (fab) fab.classList.add('hidden');
+    if (fabScan) fabScan.classList.add('hidden');
     document.getElementById('screen-' + n).classList.remove('hidden');
   }
 }
@@ -1307,6 +1356,172 @@ function capitalize(s) {
 }
 
 // ─────────────────────────────────────────
+// SCAN TICKET — OCR Tesseract.js
+// ─────────────────────────────────────────
+let pendingScan = null;
+
+function openScanner() {
+  document.getElementById('receipt-input').click();
+}
+
+async function handleReceiptFile(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+
+  // Open modal + reset state
+  const modal = document.getElementById('modal-ocr');
+  modal.classList.remove('hidden');
+  document.getElementById('scan-result-block').classList.add('hidden');
+  document.getElementById('ocr-actions').classList.add('hidden');
+  document.getElementById('ocr-cancel-wrap').classList.remove('hidden');
+  document.getElementById('ocr-progress-bar').style.width = '5%';
+  document.getElementById('ocr-status').textContent = 'Lecture de l\'image…';
+  pendingScan = null;
+
+  // Image preview
+  const prevEl = document.getElementById('ocr-preview');
+  const objURL = URL.createObjectURL(file);
+  prevEl.src = objURL;
+  prevEl.classList.remove('hidden');
+
+  try {
+    if (typeof Tesseract === 'undefined') throw new Error('Tesseract non chargé. Vérifie ta connexion internet.');
+
+    document.getElementById('ocr-progress-bar').style.width = '12%';
+    document.getElementById('ocr-status').textContent = 'Analyse OCR en cours…';
+
+    const worker = await Tesseract.createWorker(['fra', 'eng'], 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round(m.progress * 75) + 15;
+          document.getElementById('ocr-progress-bar').style.width = pct + '%';
+        }
+      }
+    });
+
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+
+    document.getElementById('ocr-progress-bar').style.width = '100%';
+    document.getElementById('ocr-status').textContent = 'Extraction des données…';
+
+    const parsed = parseReceiptText(text);
+    pendingScan = parsed || { amount: null, type: 'expense', category: 'Autre', label: '' };
+
+    if (!parsed || !parsed.amount) {
+      document.getElementById('ocr-status').textContent = '⚠️ Montant non détecté — tu pourras le saisir manuellement.';
+      document.getElementById('scan-result-val').textContent = 'Données non extraites — remplis le formulaire.';
+    } else {
+      document.getElementById('ocr-status').textContent = '✅ Analyse terminée !';
+      const lines = [];
+      if (parsed.amount) lines.push('💶 Montant : <strong>' + parsed.amount + ' €</strong>');
+      if (parsed.label)  lines.push('🏪 Commerçant : ' + parsed.label);
+      lines.push('📂 Catégorie : ' + parsed.category);
+      if (parsed.date)   lines.push('📅 Date détectée : ' + parsed.date);
+      document.getElementById('scan-result-val').innerHTML = lines.join('<br>');
+    }
+
+    document.getElementById('scan-result-block').classList.remove('hidden');
+    document.getElementById('ocr-actions').classList.remove('hidden');
+    document.getElementById('ocr-cancel-wrap').classList.add('hidden');
+
+  } catch(err) {
+    document.getElementById('ocr-status').textContent = '❌ ' + (err.message || 'Erreur OCR');
+    document.getElementById('ocr-progress-bar').style.width = '100%';
+    pendingScan = { amount: null, type: 'expense', category: 'Autre', label: '' };
+    document.getElementById('ocr-actions').classList.remove('hidden');
+    document.getElementById('ocr-cancel-wrap').classList.add('hidden');
+  }
+}
+
+function parseReceiptText(raw) {
+  if (!raw || !raw.trim()) return null;
+  const text = raw;
+
+  // 1. Find total amount — prioritise "TOTAL TTC / NET À PAYER" lines
+  let amount = null;
+  const totalPatterns = [
+    /(?:TOTAL\s*(?:TTC|NET|À\s*PAYER|A\s*PAYER|GENERAL)?|NET\s*[ÀA]\s*PAYER|MONTANT\s*D[ÛU]?|MONTANT\s*TTC|[ÀA]\s*PAYER)\s*[:\-]?\s*(\d{1,6}[,. ]\d{2})/i,
+    /(\d{1,6}[,.]\d{2})\s*€?\s*(?:TTC|NET)?\s*$/im
+  ];
+  for (const p of totalPatterns) {
+    const m = text.match(p);
+    if (m) { amount = parseFloat(m[1].replace(/[\s ]/g, '').replace(',', '.')); break; }
+  }
+  // Fallback: largest price on the ticket
+  if (!amount) {
+    const prices = [...text.matchAll(/(\d{1,4}[,.]\d{2})\s*€?/g)].map(m => parseFloat(m[1].replace(',', '.')));
+    if (prices.length) amount = Math.max(...prices);
+  }
+  if (!amount || amount <= 0) return null;
+
+  // 2. Extract date
+  let date = null;
+  const dateM = text.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if (dateM) {
+    const y = dateM[3].length === 2 ? '20' + dateM[3] : dateM[3];
+    date = dateM[1].padStart(2,'0') + '/' + dateM[2].padStart(2,'0') + '/' + y;
+  }
+
+  // 3. Extract merchant (first clean line, usually the store name)
+  let label = null;
+  const skipRx = /^(\d|ticket|caisse|re[çc]u|date|heure|time|tel|tva|siret|rcs|siren|adresse|rue|avenue|blvd|bp|cedex|www|http|merci|bienvenue)/i;
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length >= 3);
+  for (const line of lines.slice(0, 10)) {
+    if (!skipRx.test(line) && !/^\d/.test(line) && isNaN(parseFloat(line)) && line.length <= 40) {
+      const clean = line.replace(/[*_\-=#|]+/g, '').trim();
+      if (clean.length >= 3) { label = clean; break; }
+    }
+  }
+
+  // 4. Detect category from merchant keywords
+  const up = text.toUpperCase();
+  let category = 'Autre';
+  const catMap = {
+    'Courses':     ['SUPERMARCHE','CARREFOUR','LECLERC','LIDL','ALDI','INTERMARCHE','MONOPRIX','AUCHAN','CASINO','FRANPRIX','CORA','PICARD','BIOCOOP','SIMPLY','NETTO'],
+    'Resto':       ['RESTAURANT','PIZZ','KEBAB','MCDONALD','BURGER','SUSHI','BRASSERIE','SNACK','TRAITEUR','SUBWAY','KFC','QUICK'],
+    'Transport':   ['TOTAL ENERGIE','SHELL','ESSO','BP STATION','STATION-SERVICE','SNCF','RATP','UBER','TAXI','PARKING','VINCI PARK','PEAGE','AUTOROUTE'],
+    'Santé':       ['PHARMACIE','MEDECIN','CLINIQUE','HOPITAL','DENTISTE','OPTIC 2000','GRAND OPTICAL'],
+    'Loisirs':     ['CINEMA','THEATRE','MUSEE','PISCINE','GYMNASE','FITNESS','DECATH'],
+    'Vêtements':   ['ZARA','H&M','PRIMARK','UNIQLO','NIKE','ADIDAS','KIABI','JULES','CELIO'],
+    'Abonnements': ['ORANGE','SFR','BOUYGUES','FREE MOBILE'],
+    'Loyer':       ['LOYER ','EDF ','ENGIE ','VEOLIA','SYNDIC']
+  };
+  for (const [cat, words] of Object.entries(catMap)) {
+    if (words.some(w => up.includes(w))) { category = cat; break; }
+  }
+
+  return { amount: parseFloat(amount.toFixed(2)), type: 'expense', category, label: label || null, date: date || null };
+}
+
+function confirmScan() {
+  if (!pendingScan) { closeOcrModal(); return; }
+  if (!pendingScan.amount) { editScan(); return; }
+  const p = pendingScan;
+  closeOcrModal();
+  openTxModal({ type: p.type, amount: p.amount, category: p.category, label: p.label || '' });
+  pendingScan = null;
+}
+
+function editScan() {
+  const p = pendingScan || {};
+  closeOcrModal();
+  openTxModal({ type: p.type || 'expense', amount: p.amount || '', category: p.category || 'Autre', label: p.label || '' });
+  pendingScan = null;
+}
+
+function closeOcrModal(e) {
+  if (e && e.target !== document.getElementById('modal-ocr')) return;
+  document.getElementById('modal-ocr').classList.add('hidden');
+  const prev = document.getElementById('ocr-preview');
+  if (prev.src && prev.src.startsWith('blob:')) URL.revokeObjectURL(prev.src);
+  prev.src = '';
+  prev.classList.add('hidden');
+  pendingScan = null;
+}
+
+// ─────────────────────────────────────────
 // TOAST
 // ─────────────────────────────────────────
 let toastTimer = null;
@@ -1333,6 +1548,7 @@ function toast(msg) {
   }
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
