@@ -538,8 +538,8 @@
 // ─────────────────────────────────────────
 // CONFIG SUPABASE
 // ─────────────────────────────────────────
-const SUPA_URL = 'SUPA_URL_PLACEHOLDER';
-const SUPA_KEY = 'SUPA_KEY_PLACEHOLDER';
+const SUPA_URL = 'https://mwpkwmsxolatcuzfxnzt.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cGt3bXN4b2xhdGN1emZ4bnp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMzA0NTIsImV4cCI6MjA4OTcwNjQ1Mn0.ydzJy08XS5f0MbsTDusRxyMcuyahMM9K8tpSIdrpSdE';
 
 function supaHeaders(token) {
   return {
@@ -561,7 +561,11 @@ async function supaFetch(path, opts = {}) {
     if (ok) return supaFetch(path, opts);
   }
   const text = await res.text();
-  return text ? JSON.parse(text) : {};
+  if (!text) return {};
+  let data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('Erreur serveur: ' + text.substring(0, 100)); }
+  if (data && (data.error || data.error_description)) throw new Error(data.error_description || (data.error && data.error.message) || 'Erreur');
+  return data;
 }
 
 // ─────────────────────────────────────────
@@ -600,11 +604,14 @@ async function handleRegister(e) {
   const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-pass').value;
   try {
-    const res = await fetch(SUPA_URL + '/auth/v1/signup', {
+    const _r1 = await fetch(SUPA_URL + '/auth/v1/signup', {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass })
-    }).then(r => r.json());
+    });
+    const _t1 = await _r1.text();
+    let res;
+    try { res = JSON.parse(_t1); } catch(e) { throw new Error('Erreur serveur: ' + _t1.substring(0, 100)); }
     if (res.error) throw new Error(res.error.message || 'Erreur inscription');
     if (res.access_token) {
       localStorage.setItem('kash_token', res.access_token);
@@ -634,12 +641,15 @@ async function handleLogin(e) {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   try {
-    const res = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
+    const _r2 = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass })
-    }).then(r => r.json());
-    if (res.error) throw new Error(res.error_description || res.error.message || 'Identifiants incorrects');
+    });
+    const _t2 = await _r2.text();
+    let res;
+    try { res = JSON.parse(_t2); } catch(e) { throw new Error('Erreur serveur: ' + _t2.substring(0, 100)); }
+    if (res.error) throw new Error(res.error_description || (res.error && res.error.message) || 'Identifiants incorrects');
     localStorage.setItem('kash_token', res.access_token);
     if (res.refresh_token) localStorage.setItem('kash_refresh', res.refresh_token);
     // Fetch profile
@@ -661,11 +671,14 @@ function handleLogout() {
 async function refreshToken() {
   const rt = localStorage.getItem('kash_refresh');
   if (!rt) return false;
-  const res = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+  const _r3 = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
     method: 'POST',
     headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: rt })
-  }).then(r => r.json());
+  });
+  const _t3 = await _r3.text();
+  let res;
+  try { res = JSON.parse(_t3); } catch(e) { return false; }
   if (res.access_token) {
     localStorage.setItem('kash_token', res.access_token);
     if (res.refresh_token) localStorage.setItem('kash_refresh', res.refresh_token);
