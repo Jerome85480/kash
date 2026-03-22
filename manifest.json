@@ -1,0 +1,17 @@
+{
+  "name": "Kash — Ton argent, ta liberté",
+  "short_name": "Kash",
+  "description": "Gestion d'argent pour jeunes adultes avec saisie vocale.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a12",
+  "theme_color": "#7c6bff",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["finance", "lifestyle"],
+  "lang": "fr"
+}
