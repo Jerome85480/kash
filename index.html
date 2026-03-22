@@ -612,7 +612,7 @@ async function handleRegister(e) {
     const _t1 = await _r1.text();
     let res;
     try { res = JSON.parse(_t1); } catch(e) { throw new Error('Erreur serveur: ' + _t1.substring(0, 100)); }
-    if (res.error) throw new Error(res.error.message || 'Erreur inscription');
+    if (res.error || res.error_code) throw new Error(res.error?.message || res.msg || 'Erreur lors de l\'inscription');
     if (res.access_token) {
       localStorage.setItem('kash_token', res.access_token);
       if (res.refresh_token) localStorage.setItem('kash_refresh', res.refresh_token);
@@ -649,7 +649,9 @@ async function handleLogin(e) {
     const _t2 = await _r2.text();
     let res;
     try { res = JSON.parse(_t2); } catch(e) { throw new Error('Erreur serveur: ' + _t2.substring(0, 100)); }
-    if (res.error) throw new Error(res.error_description || (res.error && res.error.message) || 'Identifiants incorrects');
+    if (res.error || res.error_code || (res.msg && !res.access_token)) {
+      throw new Error(res.error_description || res.msg || (res.error && res.error.message) || 'Email ou mot de passe incorrect');
+    }
     localStorage.setItem('kash_token', res.access_token);
     if (res.refresh_token) localStorage.setItem('kash_refresh', res.refresh_token);
     // Fetch profile
@@ -1325,7 +1327,7 @@ function toast(msg) {
   const token = localStorage.getItem('kash_token');
   const user = localStorage.getItem('kash_user');
   if (token && user) {
-    currentUser = JSON.parse(user);
+    try { currentUser = JSON.parse(user); } catch(e) { localStorage.removeItem('kash_user'); showScreen('register'); return; }
     refreshToken();
     initDashboard();
   } else {
