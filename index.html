@@ -237,6 +237,37 @@
     .scan-result-block{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.22);border-radius:14px;padding:.9rem 1rem;margin-bottom:1rem;}
     .scan-result-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:600;margin-bottom:.45rem;}
     .scan-result-val{font-size:.9rem;font-weight:500;color:var(--text);line-height:1.75;}
+
+    /* ── 6-MONTH CHART ── */
+    .six-month-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:1.3rem;margin-bottom:.8rem;}
+    .six-month-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.13em;color:var(--text-muted);font-weight:600;margin-bottom:1rem;}
+
+    /* ── NOTIF BANNER ── */
+    .notif-banner{background:linear-gradient(135deg,rgba(124,107,255,.1),rgba(168,155,255,.05));border:1px solid rgba(124,107,255,.22);border-radius:16px;padding:.9rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;}
+    .notif-banner-icon{font-size:1.4rem;flex-shrink:0;}
+    .notif-banner-text{flex:1;font-size:.8rem;color:var(--text-muted);line-height:1.4;}
+    .notif-banner-text strong{color:var(--text);display:block;margin-bottom:.1rem;font-size:.84rem;}
+    .btn-notif-enable{background:var(--violet-dim);border:1px solid rgba(124,107,255,.35);color:var(--violet-light);border-radius:9px;padding:.38rem .8rem;font-size:.76rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+    .btn-notif-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:.95rem;padding:.15rem .3rem;flex-shrink:0;opacity:.6;}
+
+    /* ── RECEIPT ATTACHMENT ── */
+    .tx-receipt-btn{background:rgba(124,107,255,.1);border:1px solid rgba(124,107,255,.2);border-radius:7px;padding:.18rem .42rem;font-size:.68rem;cursor:pointer;color:var(--violet-light);transition:all .2s;flex-shrink:0;margin-right:.2rem;}
+    .tx-receipt-btn:hover{background:rgba(124,107,255,.22);}
+    .receipt-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem;cursor:pointer;}
+    .receipt-lightbox img{max-width:100%;max-height:88vh;border-radius:14px;object-fit:contain;pointer-events:none;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+    .tx-attach-indicator{font-size:.75rem;color:var(--violet-light);background:rgba(124,107,255,.09);border:1px solid rgba(124,107,255,.18);border-radius:9px;padding:.3rem .7rem;margin-bottom:.9rem;display:none;align-items:center;gap:.35rem;}
+
+    /* ── AI ADVISOR ── */
+    .ai-advisor-btn{background:linear-gradient(135deg,rgba(168,155,255,.14),rgba(124,107,255,.07));border:1px solid rgba(124,107,255,.28);color:var(--violet-light);border-radius:12px;padding:.7rem 1.1rem;font-size:.84rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;width:100%;margin-bottom:.8rem;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:.5rem;}
+    .ai-advisor-btn:hover{background:rgba(124,107,255,.18);transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,107,255,.2);}
+    .ai-response{font-size:.875rem;color:var(--text);line-height:1.8;}
+    .ai-thinking{display:flex;align-items:center;gap:.65rem;color:var(--text-muted);font-size:.85rem;padding:.5rem 0;}
+    .ai-thinking-dots{display:flex;gap:4px;}
+    .ai-thinking-dots span{width:6px;height:6px;border-radius:50%;background:var(--violet);animation:ai-pulse 1.2s ease-in-out infinite;}
+    .ai-thinking-dots span:nth-child(2){animation-delay:.2s;}
+    .ai-thinking-dots span:nth-child(3){animation-delay:.4s;}
+    @keyframes ai-pulse{0%,80%,100%{transform:scale(.65);opacity:.35}40%{transform:scale(1);opacity:1}}
+    .ai-section-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.13em;color:var(--violet-light);font-weight:600;margin-bottom:.6rem;}
   </style>
 </head>
 <body>
@@ -357,6 +388,17 @@
     </div>
   </div>
 
+  <!-- Notification permission banner -->
+  <div class="notif-banner hidden" id="notif-banner">
+    <div class="notif-banner-icon">🔔</div>
+    <div class="notif-banner-text">
+      <strong>Alertes budget</strong>
+      Reçois une alerte quand tu dépasses ton budget.
+    </div>
+    <button class="btn-notif-enable" onclick="enableNotifications()">Activer</button>
+    <button class="btn-notif-close" onclick="dismissNotifBanner()" title="Fermer">✕</button>
+  </div>
+
   <!-- 7-day chart -->
   <div class="chart-card">
     <div class="chart-title">7 derniers jours</div>
@@ -410,6 +452,10 @@
   <!-- Tab: Stats -->
   <div class="tab-pane" id="tab-stats">
     <div class="stats-grid" id="stats-grid"></div>
+    <div class="six-month-card">
+      <div class="six-month-title">Tendance 6 mois</div>
+      <svg id="six-month-svg" viewBox="0 0 340 90" style="width:100%;height:90px;overflow:visible;"></svg>
+    </div>
     <div class="donut-wrap">
       <svg class="donut-svg" id="donut-svg" viewBox="0 0 100 100"></svg>
       <div class="donut-legend" id="donut-legend"></div>
@@ -418,6 +464,7 @@
       <div class="compare-title">Comparaison mois / mois précédent</div>
       <div id="compare-content"></div>
     </div>
+    <button class="ai-advisor-btn" onclick="openAIAdvisor()">✨ Conseil IA — Analyse mes finances</button>
   </div>
 </div>
 
@@ -478,6 +525,27 @@
   </div>
 </div>
 
+<!-- ══ RECEIPT LIGHTBOX ══ -->
+<div class="receipt-lightbox hidden" id="receipt-lightbox" onclick="closeReceiptLightbox()">
+  <img id="receipt-lightbox-img" src="" alt="Ticket">
+</div>
+
+<!-- ══ MODAL AI ADVISOR ══ -->
+<div class="modal-overlay hidden center" id="modal-ai" onclick="closeAIModal(event)">
+  <div class="modal center" onclick="event.stopPropagation()" style="max-width:460px;">
+    <div class="modal-title">✨ Conseil IA</div>
+    <div id="ai-content">
+      <div class="ai-thinking">
+        <div class="ai-thinking-dots"><span></span><span></span><span></span></div>
+        Analyse de tes finances…
+      </div>
+    </div>
+    <div style="margin-top:1.25rem;text-align:center;">
+      <button class="btn-ghost" onclick="closeAIModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL ADD TRANSACTION ══ -->
 <div class="modal-overlay hidden" id="modal-tx" onclick="closeTxModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -515,7 +583,8 @@
     </div>
     <div class="field"><label>Libellé (optionnel)</label><input type="text" id="tx-label" placeholder="Ex: Netflix, Lidl..."></div>
     <div class="field"><label>Note (optionnel)</label><input type="text" id="tx-note" placeholder="Détails..."></div>
-    <button class="btn-cta" onclick="saveTx()">Enregistrer →</button>
+    <div class="tx-attach-indicator" id="tx-receipt-indicator">📎 <span id="tx-receipt-name">ticket.jpg</span></div>
+    <button class="btn-cta" id="tx-save-btn" onclick="saveTx()">Enregistrer →</button>
     <div style="margin-top:.75rem;text-align:center;"><button class="btn-ghost" onclick="closeTxModal()">Annuler</button></div>
   </div>
 </div>
@@ -745,6 +814,7 @@ async function initDashboard() {
   setMonthLabel();
   await Promise.all([loadTransactions(), loadGoals(), loadDebts()]);
   renderAll();
+  setupNotifications();
 }
 
 function setMonthLabel() {
@@ -869,6 +939,9 @@ function renderTransactions(txs) {
     const icon = CAT_ICONS[t.category] || '📦';
     const date = new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     const sign = t.type === 'income' ? '+' : '-';
+    const receiptBtn = t.receipt_url
+      ? `<button class="tx-receipt-btn" onclick="viewReceipt('${t.receipt_url}')" title="Voir le ticket">📎</button>`
+      : '';
     return `<div class="tx-item">
       <div class="tx-icon ${t.type}">${icon}</div>
       <div class="tx-info">
@@ -876,6 +949,7 @@ function renderTransactions(txs) {
         <div class="tx-meta">${t.category} · ${date}</div>
       </div>
       <div class="tx-amount ${t.type}">${sign}${fmt(t.amount)} €</div>
+      ${receiptBtn}
       <button class="tx-delete" onclick="deleteTx('${t.id}')" title="Supprimer">🗑</button>
     </div>`;
   }).join('');
@@ -894,11 +968,21 @@ function openTxModal(prefill = {}) {
   if (prefill.amount) document.getElementById('tx-amount').value = prefill.amount;
   if (prefill.category) document.getElementById('tx-category').value = prefill.category;
   if (prefill.label) document.getElementById('tx-label').value = prefill.label;
+  const indicator = document.getElementById('tx-receipt-indicator');
+  if (pendingReceiptFile) {
+    indicator.style.display = 'flex';
+    document.getElementById('tx-receipt-name').textContent = pendingReceiptFile.name || 'ticket.jpg';
+  } else {
+    indicator.style.display = 'none';
+  }
   document.getElementById('modal-tx').classList.remove('hidden');
 }
 function closeTxModal(e) {
-  if (!e || e.target === document.getElementById('modal-tx'))
+  if (!e || e.target === document.getElementById('modal-tx')) {
     document.getElementById('modal-tx').classList.add('hidden');
+    pendingReceiptFile = null;
+    document.getElementById('tx-receipt-indicator').style.display = 'none';
+  }
 }
 
 async function saveTx() {
@@ -908,15 +992,23 @@ async function saveTx() {
   const label = document.getElementById('tx-label').value.trim();
   const note = document.getElementById('tx-note').value.trim();
   if (!amount || amount <= 0) { toast('❌ Montant invalide'); return; }
-  const tx = { user_id: currentUser.id, type, amount, category, label: label || null, note: note || null, date: new Date().toISOString() };
+  const saveBtn = document.getElementById('tx-save-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner"></span>Enregistrement…'; }
+  let receipt_url = null;
+  if (pendingReceiptFile) {
+    toast('📤 Upload du ticket…');
+    receipt_url = await uploadReceiptToStorage(pendingReceiptFile);
+    pendingReceiptFile = null;
+  }
+  const tx = { user_id: currentUser.id, type, amount, category, label: label || null, note: note || null, date: new Date().toISOString(), receipt_url };
   const res = await supaFetch('/rest/v1/transactions', { method: 'POST', body: JSON.stringify(tx) });
   if (Array.isArray(res) && res[0]) allTransactions.unshift(res[0]);
   else allTransactions.unshift({ ...tx, id: Date.now().toString() });
   renderAll();
   closeTxModal();
-  // clear
   ['tx-amount','tx-label','tx-note'].forEach(id => document.getElementById(id).value = '');
-  toast('✅ Transaction enregistrée !');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer →'; }
+  toast(receipt_url ? '✅ Transaction + ticket enregistrés !' : '✅ Transaction enregistrée !');
 }
 
 // ─────────────────────────────────────────
@@ -1146,6 +1238,9 @@ function renderStats(thisMonthTx) {
     ).join('');
   }
 
+  // 6-month trend chart
+  renderSixMonthChart();
+
   // Comparison
   const maxBar = Math.max(curInc, prevInc, curExp, prevExp, 1);
   document.getElementById('compare-content').innerHTML = [
@@ -1194,6 +1289,7 @@ async function handleReceiptFile(e) {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
+  pendingReceiptFile = file; // keep for upload after tx confirm
 
   // Open modal + reset state
   const modal = document.getElementById('modal-ocr');
@@ -1322,22 +1418,22 @@ function parseReceiptText(raw) {
 }
 
 function confirmScan() {
-  if (!pendingScan) { closeOcrModal(); return; }
+  if (!pendingScan) { closeOcrModal(null, false); return; }
   if (!pendingScan.amount) { editScan(); return; }
   const p = pendingScan;
-  closeOcrModal();
+  closeOcrModal(null, true); // keep receipt file for tx modal
   openTxModal({ type: p.type, amount: p.amount, category: p.category, label: p.label || '' });
   pendingScan = null;
 }
 
 function editScan() {
   const p = pendingScan || {};
-  closeOcrModal();
+  closeOcrModal(null, true); // keep receipt file for tx modal
   openTxModal({ type: p.type || 'expense', amount: p.amount || '', category: p.category || 'Autre', label: p.label || '' });
   pendingScan = null;
 }
 
-function closeOcrModal(e) {
+function closeOcrModal(e, keepReceipt = false) {
   if (e && e.target !== document.getElementById('modal-ocr')) return;
   document.getElementById('modal-ocr').classList.add('hidden');
   const prev = document.getElementById('ocr-preview');
@@ -1345,6 +1441,7 @@ function closeOcrModal(e) {
   prev.src = '';
   prev.classList.add('hidden');
   pendingScan = null;
+  if (!keepReceipt) pendingReceiptFile = null;
 }
 
 // ─────────────────────────────────────────
@@ -1557,6 +1654,196 @@ async function confirmImport() {
 
   btn.disabled = false;
   btn.textContent = '✅ Importer toutes les transactions';
+}
+
+// ─────────────────────────────────────────
+// RECEIPT PHOTO — Supabase Storage
+// ─────────────────────────────────────────
+let pendingReceiptFile = null;
+
+async function uploadReceiptToStorage(file) {
+  if (!file || !currentUser) return null;
+  try {
+    const ext = file.type.includes('png') ? 'png' : file.type.includes('webp') ? 'webp' : 'jpg';
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const token = localStorage.getItem('kash_token');
+    const res = await fetch(`${SUPA_URL}/storage/v1/object/receipts/${path}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'false'
+      },
+      body: file
+    });
+    if (!res.ok) { console.error('Storage upload failed:', await res.text()); return null; }
+    return `${SUPA_URL}/storage/v1/object/public/receipts/${path}`;
+  } catch(e) { console.error('Upload error:', e); return null; }
+}
+
+function viewReceipt(url) {
+  const lb = document.getElementById('receipt-lightbox');
+  document.getElementById('receipt-lightbox-img').src = url;
+  lb.classList.remove('hidden');
+}
+function closeReceiptLightbox() {
+  document.getElementById('receipt-lightbox').classList.add('hidden');
+  document.getElementById('receipt-lightbox-img').src = '';
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATIONS PUSH
+// ─────────────────────────────────────────
+function setupNotifications() {
+  if (!('Notification' in window)) return;
+  const pref = localStorage.getItem('kash_notif');
+  if (Notification.permission === 'granted') { checkBudgetAlerts(); return; }
+  if (pref === 'dismissed' || Notification.permission === 'denied') return;
+  setTimeout(() => document.getElementById('notif-banner')?.classList.remove('hidden'), 2000);
+}
+
+async function enableNotifications() {
+  document.getElementById('notif-banner')?.classList.add('hidden');
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    localStorage.setItem('kash_notif', 'granted');
+    toast('🔔 Notifications activées !');
+    checkBudgetAlerts();
+  } else {
+    localStorage.setItem('kash_notif', 'dismissed');
+  }
+}
+function dismissNotifBanner() {
+  localStorage.setItem('kash_notif', 'dismissed');
+  document.getElementById('notif-banner')?.classList.add('hidden');
+}
+
+function checkBudgetAlerts() {
+  if (Notification.permission !== 'granted') return;
+  const lastNotif = parseInt(localStorage.getItem('kash_last_notif') || '0');
+  if (Date.now() - lastNotif < 6 * 3600000) return; // max once per 6h
+  const now = new Date();
+  const thisMonth = allTransactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const totalInc = thisMonth.filter(t=>t.type==='income').reduce((s,t)=>s+parseFloat(t.amount),0);
+  const totalExp = thisMonth.filter(t=>t.type==='expense').reduce((s,t)=>s+parseFloat(t.amount),0);
+  if (totalInc > 0 && totalExp > totalInc * 0.9) {
+    sendNotif('⚠️ Alerte budget Kash', `Tu as dépensé ${((totalExp/totalInc)*100).toFixed(0)}% de tes revenus ce mois !`);
+    return;
+  }
+  const byCat = {};
+  thisMonth.filter(t=>t.type==='expense').forEach(t => { byCat[t.category] = (byCat[t.category]||0)+parseFloat(t.amount); });
+  const top = Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
+  if (top && top[1] > 300) {
+    sendNotif('💸 Grosse dépense ce mois', `${top[0]} : ${top[1].toFixed(0)} €`);
+  }
+}
+function sendNotif(title, body) {
+  localStorage.setItem('kash_last_notif', Date.now().toString());
+  try { new Notification(title, { body, icon: '/icons/icon-192.png' }); } catch(e) {}
+}
+
+// ─────────────────────────────────────────
+// 6-MONTH TREND CHART
+// ─────────────────────────────────────────
+function renderSixMonthChart() {
+  const svg = document.getElementById('six-month-svg');
+  if (!svg) return;
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const lbl = d.toLocaleDateString('fr-FR', { month: 'short' });
+    const txs = allTransactions.filter(t => {
+      const td = new Date(t.date);
+      return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear();
+    });
+    const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+parseFloat(t.amount),0);
+    const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+parseFloat(t.amount),0);
+    months.push({ lbl, inc, exp });
+  }
+  const W=340, H=90, barW=20, gap=5, groupGap=14;
+  const maxVal = Math.max(...months.flatMap(m=>[m.inc,m.exp]),1);
+  const barAreaH = H - 22;
+  const groupW = barW*2+gap;
+  const totalW = months.length*(groupW+groupGap)-groupGap;
+  const startX = (W-totalW)/2;
+  let html = `<defs>
+    <linearGradient id="sm-inc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#22c55e" stop-opacity=".6"/></linearGradient>
+    <linearGradient id="sm-exp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#ef4444" stop-opacity=".6"/></linearGradient>
+  </defs>`;
+  months.forEach((m,i) => {
+    const gx = startX + i*(groupW+groupGap);
+    if (m.inc>0) html+=`<rect x="${gx}" y="${barAreaH-(m.inc/maxVal*barAreaH)+2}" width="${barW}" height="${Math.max(3,m.inc/maxVal*barAreaH)}" rx="3" fill="url(#sm-inc)" opacity=".85"/>`;
+    if (m.exp>0) html+=`<rect x="${gx+barW+gap}" y="${barAreaH-(m.exp/maxVal*barAreaH)+2}" width="${barW}" height="${Math.max(3,m.exp/maxVal*barAreaH)}" rx="3" fill="url(#sm-exp)" opacity=".85"/>`;
+    html+=`<text x="${gx+groupW/2}" y="${H}" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="8" fill="rgba(168,155,255,.55)">${m.lbl}</text>`;
+  });
+  html+=`<rect x="4" y="3" width="7" height="7" rx="2" fill="#4ade80" opacity=".85"/><text x="14" y="10" font-size="7.5" font-family="Plus Jakarta Sans,sans-serif" fill="rgba(168,155,255,.7)">Revenus</text>
+    <rect x="70" y="3" width="7" height="7" rx="2" fill="#f87171" opacity=".85"/><text x="80" y="10" font-size="7.5" font-family="Plus Jakarta Sans,sans-serif" fill="rgba(168,155,255,.7)">Dépenses</text>`;
+  svg.innerHTML = html;
+}
+
+// ─────────────────────────────────────────
+// AI ADVISOR — OpenRouter
+// ─────────────────────────────────────────
+async function openAIAdvisor() {
+  const modal = document.getElementById('modal-ai');
+  modal.classList.remove('hidden');
+  document.getElementById('ai-content').innerHTML = `<div class="ai-thinking"><div class="ai-thinking-dots"><span></span><span></span><span></span></div>Analyse de tes finances en cours…</div>`;
+  const now = new Date();
+  const months = [];
+  for (let i = 2; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const lbl = d.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+    const txs = allTransactions.filter(t => {
+      const td = new Date(t.date);
+      return td.getMonth()===d.getMonth() && td.getFullYear()===d.getFullYear();
+    });
+    const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+parseFloat(t.amount),0);
+    const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+parseFloat(t.amount),0);
+    const byCat = {};
+    txs.filter(t=>t.type==='expense').forEach(t=>{ byCat[t.category]=(byCat[t.category]||0)+parseFloat(t.amount); });
+    months.push({ lbl, inc, exp, byCat });
+  }
+  const totalInc = allTransactions.filter(t=>t.type==='income').reduce((s,t)=>s+parseFloat(t.amount),0);
+  const totalExp = allTransactions.filter(t=>t.type==='expense').reduce((s,t)=>s+parseFloat(t.amount),0);
+  const prompt = `Tu es un conseiller financier bienveillant pour un jeune adulte français. Données des 3 derniers mois :
+
+${months.map(m=>`**${m.lbl}** : revenus ${m.inc.toFixed(0)}€, dépenses ${m.exp.toFixed(0)}€\n  Catégories: ${Object.entries(m.byCat).map(([k,v])=>`${k} ${v.toFixed(0)}€`).join(', ')||'aucune'}`).join('\n\n')}
+
+Solde total actuel : ${(totalInc-totalExp).toFixed(2)}€
+
+Donne 3 conseils financiers personnalisés, concrets et encourageants. Utilise des émojis. Sois direct. 180 mots max. En français.`;
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer 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',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.origin,
+        'X-Title': 'Kash'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 450
+      })
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error(data.error?.message || 'Réponse vide');
+    document.getElementById('ai-content').innerHTML = `
+      <div class="ai-section-lbl">Analyse personnalisée</div>
+      <div class="ai-response">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`;
+  } catch(err) {
+    document.getElementById('ai-content').innerHTML = `<div style="color:var(--red);font-size:.85rem">❌ ${err.message || 'Erreur réseau'}</div>`;
+  }
+}
+function closeAIModal(e) {
+  if (!e || e.target === document.getElementById('modal-ai'))
+    document.getElementById('modal-ai').classList.add('hidden');
 }
 
 // ─────────────────────────────────────────
