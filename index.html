@@ -2148,16 +2148,14 @@ Solde total actuel : ${(totalInc-totalExp).toFixed(2)}€
 
 Donne 3 conseils financiers personnalisés, concrets et encourageants. Utilise des émojis. Sois direct. 180 mots max. En français.`;
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer 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',
-        'Content-Type': 'application/json',
-        'HTTP-Referer': location.origin,
-        'X-Title': 'Kash'
+        'Authorization': 'Bearer b8e04e9b46234b8594964cce20af8318',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'glm-4.5-flash',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 450
       })
