@@ -185,19 +185,6 @@
     .compare-bar-prev{background:rgba(107,106,138,.4);}
     .compare-val{font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:600;width:60px;text-align:right;flex-shrink:0;}
 
-    /* Voice FAB */
-    .fab{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);z-index:100;}
-    .fab-btn{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-light));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 8px 32px rgba(124,107,255,.5);transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;}
-    .fab-btn:hover{transform:scale(1.1);}
-    .fab-btn:active{transform:scale(.95);}
-    .fab-btn.listening{animation:fab-pulse 1.2s ease-in-out infinite;}
-    @keyframes fab-pulse{0%,100%{box-shadow:0 8px 32px rgba(124,107,255,.5),0 0 0 0 rgba(124,107,255,.4)}50%{box-shadow:0 8px 32px rgba(124,107,255,.6),0 0 0 18px rgba(124,107,255,0)}}
-    .fab-ring{position:absolute;width:64px;height:64px;border-radius:50%;border:2px solid var(--violet);opacity:0;animation:ring-expand 1.5s ease-out infinite;}
-    .fab-ring:nth-child(2){animation-delay:.5s;}
-    .fab-ring:nth-child(3){animation-delay:1s;}
-    .fab-btn.listening .fab-ring{opacity:1;}
-    @keyframes ring-expand{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.2);opacity:0}}
-    .fab-label{text-align:center;margin-top:.5rem;font-size:.7rem;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
 
     /* Modals */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:1rem;}
@@ -212,8 +199,6 @@
     .modal-actions .btn-cta{flex:1;}
     .modal-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.06);border:none;color:var(--text-muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
 
-    /* Voice transcript display */
-    .voice-transcript{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;font-size:.88rem;color:var(--text-muted);font-style:italic;min-height:3rem;display:flex;align-items:center;}
 
     /* Amount input */
     .amount-input-wrap{position:relative;}
@@ -222,14 +207,28 @@
     /* Month display */
     .month-filter{font-size:.78rem;color:var(--text-muted);font-weight:500;}
 
+    /* ── IMPORT RELEVÉ ── */
+    .import-table-wrap{max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;margin-bottom:1rem;}
+    .import-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+    .import-table th{background:rgba(124,107,255,.1);color:var(--violet-light);font-weight:600;padding:.5rem .6rem;text-align:left;position:sticky;top:0;border-bottom:1px solid var(--border);}
+    .import-table td{padding:.4rem .6rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle;}
+    .import-table tr:last-child td{border-bottom:none;}
+    .import-table .td-amt.income{color:var(--green);}
+    .import-table .td-amt.expense{color:var(--red);}
+    .import-count{font-size:.82rem;color:var(--text-muted);margin-bottom:.85rem;}
+    .import-count strong{color:var(--violet-light);}
+    .btn-import{background:linear-gradient(135deg,var(--violet),var(--violet-light));color:#fff;border:none;border-radius:14px;padding:.85rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;width:100%;transition:all .3s;}
+    .btn-import:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,107,255,.4);}
+    .btn-import:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
     @media(max-width:360px){.balance-amount{font-size:2.3rem;}.tab{font-size:.65rem;padding:.45rem .2rem;}}
 
     /* ── SCAN FAB ── */
-    .fab-scan{position:fixed;bottom:2.2rem;left:50%;margin-left:44px;z-index:100;display:flex;flex-direction:column;align-items:center;}
-    .fab-scan-btn{width:46px;height:46px;border-radius:50%;background:rgba(20,15,40,.96);border:1.5px solid rgba(124,107,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.15rem;box-shadow:0 4px 20px rgba(0,0,0,.45);transition:all .28s cubic-bezier(.34,1.56,.64,1);}
-    .fab-scan-btn:hover{transform:scale(1.12);border-color:var(--violet);}
-    .fab-scan-btn:active{transform:scale(.94);}
-    .fab-scan-lbl{margin-top:.35rem;font-size:.63rem;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+    .fab-scan{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;}
+    .fab-scan-btn{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-light));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 8px 32px rgba(124,107,255,.5);transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+    .fab-scan-btn:hover{transform:scale(1.1);}
+    .fab-scan-btn:active{transform:scale(.95);}
+    .fab-scan-lbl{margin-top:.5rem;font-size:.7rem;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
 
     /* ── OCR MODAL ── */
     .ocr-img-preview{width:100%;max-height:170px;object-fit:contain;border-radius:12px;margin-bottom:.8rem;border:1px solid var(--border);background:rgba(255,255,255,.03);}
@@ -379,7 +378,10 @@
         <div class="section-title">Transactions</div>
         <div class="month-filter" id="month-label"></div>
       </div>
-      <button class="btn-add" onclick="openTxModal()">+ Ajouter</button>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn-add" onclick="openImportModal()" title="Importer un relevé de compte">📂 Relevé</button>
+        <button class="btn-add" onclick="openTxModal()">+ Ajouter</button>
+      </div>
     </div>
     <div class="tx-list" id="tx-list"><div class="tx-empty">Aucune transaction ce mois-ci.</div></div>
   </div>
@@ -428,16 +430,6 @@
   <div class="fab-scan-lbl">Scanner</div>
 </div>
 
-<!-- FAB Vocal -->
-<div class="fab hidden" id="fab">
-  <button class="fab-btn" id="fab-btn" onclick="startVoice()">
-    <div class="fab-ring"></div>
-    <div class="fab-ring"></div>
-    <div class="fab-ring"></div>
-    🎤
-  </button>
-  <div class="fab-label" id="fab-label">Parler</div>
-</div>
 
 <!-- ══ MODAL OCR SCAN ══ -->
 <div class="modal-overlay hidden center" id="modal-ocr" onclick="closeOcrModal(event)">
@@ -461,19 +453,27 @@
   </div>
 </div>
 
-<!-- ══ MODAL VOICE CONFIRM ══ -->
-<div class="modal-overlay hidden" id="modal-voice" onclick="closeVoiceModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-title">🎤 J'ai compris…</div>
-    <div class="voice-transcript" id="voice-transcript">En attente…</div>
-    <div class="modal-parsed" id="modal-parsed-block">
-      <div class="modal-parsed-label">Transaction détectée</div>
-      <div class="modal-parsed-val" id="modal-parsed-val">—</div>
+
+<!-- ══ MODAL IMPORT RELEVÉ ══ -->
+<input type="file" id="import-input" accept=".csv,.txt" style="display:none" onchange="handleImportFile(event)">
+<div class="modal-overlay hidden center" id="modal-import" onclick="closeImportModal(event)">
+  <div class="modal center" onclick="event.stopPropagation()" style="max-width:520px;">
+    <div class="modal-title">📂 Importer un relevé</div>
+    <div id="import-step-1">
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Importe ton relevé bancaire au format <strong style="color:var(--text);">CSV</strong>. Tous les formats sont supportés : Société Générale, BNP, LCL, CIC, Crédit Agricole, etc.</p>
+      <button class="btn-cta" onclick="document.getElementById('import-input').click()">Choisir un fichier CSV →</button>
+      <div style="margin-top:.75rem;text-align:center;"><button class="btn-ghost" onclick="closeImportModal()">Annuler</button></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn-cta" style="background:linear-gradient(135deg,var(--green),#22c55e);color:#071009;" onclick="confirmVoice()">✅ Valider</button>
-      <button class="btn-ghost" onclick="closeVoiceModal()">✏️ Modifier</button>
-      <button class="btn-ghost" style="color:var(--red);border-color:rgba(248,113,113,.3);" onclick="closeVoiceModal()">❌ Annuler</button>
+    <div id="import-step-2" class="hidden">
+      <div class="import-count" id="import-count">—</div>
+      <div class="import-table-wrap">
+        <table class="import-table">
+          <thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Catégorie</th></tr></thead>
+          <tbody id="import-tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn-import" id="import-btn" onclick="confirmImport()">✅ Importer toutes les transactions</button>
+      <div style="margin-top:.75rem;text-align:center;"><button class="btn-ghost" onclick="resetImportModal()">← Changer de fichier</button></div>
     </div>
   </div>
 </div>
@@ -624,14 +624,11 @@ function showScreen(n) {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
-  const fab = document.getElementById('fab');
   const fabScan = document.getElementById('fab-scan');
   if (n === 'dashboard') {
     document.getElementById('dashboard').classList.remove('hidden');
-    if (fab) fab.classList.remove('hidden');
     if (fabScan) fabScan.classList.remove('hidden');
   } else {
-    if (fab) fab.classList.add('hidden');
     if (fabScan) fabScan.classList.add('hidden');
     document.getElementById('screen-' + n).classList.remove('hidden');
   }
@@ -1185,177 +1182,6 @@ function switchTab(name) {
 }
 
 // ─────────────────────────────────────────
-// VOICE — Web Speech API
-// ─────────────────────────────────────────
-let recognition = null, pendingParsed = null;
-
-function startVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('❌ Reconnaissance vocale non supportée sur ce navigateur'); return; }
-  if (recognition) { recognition.abort(); }
-  recognition = new SR();
-  recognition.lang = 'fr-FR';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  const btn = document.getElementById('fab-btn');
-  const lbl = document.getElementById('fab-label');
-  btn.classList.add('listening');
-  lbl.textContent = 'J\'écoute…';
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    processVoice(transcript);
-  };
-  recognition.onerror = (event) => {
-    btn.classList.remove('listening');
-    lbl.textContent = 'Parler';
-    if (event.error !== 'aborted') toast('❌ Erreur micro : ' + event.error);
-  };
-  recognition.onend = () => {
-    btn.classList.remove('listening');
-    lbl.textContent = 'Parler';
-  };
-  recognition.start();
-}
-
-function processVoice(transcript) {
-  document.getElementById('voice-transcript').textContent = '"' + transcript + '"';
-  const parsed = parseVoiceInput(transcript);
-  pendingParsed = parsed;
-
-  if (!parsed) {
-    document.getElementById('modal-parsed-val').textContent = '⚠️ Impossible de comprendre. Essaie avec un montant clair.';
-    document.getElementById('modal-voice').classList.remove('hidden');
-    return;
-  }
-
-  let label = '';
-  if (parsed.type === 'debt') {
-    const arrow = parsed.direction === 'owe' ? '😬 Je dois' : '🤝 On me doit';
-    label = `${arrow} — ${parsed.amount} € — ${parsed.person}`;
-  } else {
-    const icon = parsed.type === 'income' ? '💰 Revenu' : '💸 Dépense';
-    label = `${icon} — ${parsed.amount} € — ${parsed.category}`;
-    if (parsed.label) label += ` (${parsed.label})`;
-  }
-  document.getElementById('modal-parsed-val').textContent = label;
-  document.getElementById('modal-voice').classList.remove('hidden');
-}
-
-async function confirmVoice() {
-  if (!pendingParsed) { closeVoiceModal(); return; }
-  const p = pendingParsed;
-  closeVoiceModal();
-
-  if (p.type === 'debt') {
-    const debt = { user_id: currentUser.id, direction: p.direction, person_name: p.person, amount: p.amount, note: p.note || null };
-    const res = await supaFetch('/rest/v1/debts', { method: 'POST', body: JSON.stringify(debt) });
-    if (Array.isArray(res) && res[0]) allDebts.unshift(res[0]);
-    else allDebts.unshift({ ...debt, id: Date.now().toString(), settled: false });
-    renderDebts();
-    switchTab('dettes');
-    toast('💳 Dette enregistrée vocalement !');
-  } else {
-    const tx = { user_id: currentUser.id, type: p.type, amount: p.amount, category: p.category, label: p.label || null, date: new Date().toISOString() };
-    const res = await supaFetch('/rest/v1/transactions', { method: 'POST', body: JSON.stringify(tx) });
-    if (Array.isArray(res) && res[0]) allTransactions.unshift(res[0]);
-    else allTransactions.unshift({ ...tx, id: Date.now().toString() });
-    renderAll();
-    switchTab('flux');
-    toast('✅ Transaction vocale enregistrée !');
-  }
-  pendingParsed = null;
-}
-
-function closeVoiceModal(e) {
-  if (!e || e.target === document.getElementById('modal-voice')) {
-    document.getElementById('modal-voice').classList.add('hidden');
-    pendingParsed = null;
-  }
-}
-
-// ─────────────────────────────────────────
-// NLP VOICE PARSER
-// ─────────────────────────────────────────
-function parseVoiceInput(t) {
-  const s = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  // 1. Find amount
-  const amtMatch = s.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:euros?|€)/i)
-    || s.match(/(\d+(?:[.,]\d{1,2})?)/);
-  if (!amtMatch) return null;
-  const amount = parseFloat(amtMatch[1].replace(',', '.'));
-  if (!amount || amount <= 0) return null;
-
-  // 2. Detect debt
-  const oweMatch = s.match(/(?:je dois|je te dois|dois a|dois à)\s+(?:\d[\d,.]*\s*(?:euros?|€)\s+(?:a|à)\s+)?([a-zàâéèêîïôùûü\-]+)/i)
-    || s.match(/(?:\d[\d,.]*\s*(?:euros?|€)\s+(?:a|à)\s+)([a-zàâéèêîïôùûü\-]+)/i);
-  if (oweMatch || s.match(/\b(dois a |dois à )/i)) {
-    const personMatch = s.match(/(?:dois (?:a|à)|dois a|dois à)\s+([a-zàâéèêîïôùûü\-]+)/i);
-    const person = personMatch ? capitalize(personMatch[1]) : 'Inconnu';
-    return { type: 'debt', direction: 'owe', amount, person };
-  }
-
-  const owedMatch = s.match(/([a-zàâéèêîïôùûü\-]+)\s+(?:me doit|m['']?doit|te doit)/i);
-  if (owedMatch) {
-    return { type: 'debt', direction: 'owed', amount, person: capitalize(owedMatch[1]) };
-  }
-
-  // 3. Detect type
-  const incomeWords = ['recu','gagne','salaire','revenu','paye par','rembourse','virement','recois','recoit','rentre'];
-  const expenseWords = ['depense','paye','achete','claque','sorti','retire','offert'];
-
-  let type = null;
-  for (const w of incomeWords) { if (s.includes(w)) { type = 'income'; break; } }
-  if (!type) for (const w of expenseWords) { if (s.includes(w)) { type = 'expense'; break; } }
-  if (!type) type = 'expense'; // default
-
-  // 4. Detect category
-  const cats = {
-    'Salaire': ['salaire','paie','paye ','mensualite'],
-    'Job': ['job','boulot','freelance','travail','taf'],
-    'Virement': ['virement','transfert'],
-    'Resto': ['resto','restaurant','manger','pizza','kebab','mcdo','burger','sushi','sandwi','fast food','nourriture'],
-    'Courses': ['courses','supermarche','supermarché','lidl','carrefour','leclerc','monoprix','aldi','intermarche'],
-    'Transport': ['essence','train','bus','uber','taxi','voiture','carburant','metro','tramway','velo','trottinette'],
-    'Loisirs': ['cinema','cine','concert','sortie','jeux','gaming','bar','boite','club','fete','vacances','voyage'],
-    'Abonnements': ['netflix','spotify','youtube','abonnement','abo','prime','disney','canal','twitch','deezer'],
-    'Vêtements': ['vetements','fringues','chaussures','baskets','nike','adidas','zara','h&m','mode'],
-    'Santé': ['medecin','pharmacie','sport','salle','hopital','dentiste','piscine'],
-    'Loyer': ['loyer','loue','appartement','maison','charges']
-  };
-
-  let category = 'Autre';
-  for (const [cat, words] of Object.entries(cats)) {
-    for (const w of words) {
-      if (s.includes(w)) { category = cat; break; }
-    }
-    if (category !== 'Autre') break;
-  }
-
-  // 5. Try to extract a label from remaining words
-  const label = extractLabel(s, amount);
-
-  return { type, amount, category, label };
-}
-
-function extractLabel(s, amount) {
-  // Remove common trigger words and the amount
-  const cleaned = s
-    .replace(/j'ai /g, '')
-    .replace(/depense|paye|achete|recu|gagne|pour|de |du |la |le |les |une |un /g, '')
-    .replace(new RegExp(amount.toString().replace('.', '[.,]') + '\\s*(?:euros?|€)?', 'i'), '')
-    .trim();
-  const words = cleaned.split(/\s+/).filter(w => w.length > 2);
-  return words.slice(0, 2).join(' ') || null;
-}
-
-function capitalize(s) {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
-}
-
-// ─────────────────────────────────────────
 // SCAN TICKET — OCR Tesseract.js
 // ─────────────────────────────────────────
 let pendingScan = null;
@@ -1519,6 +1345,218 @@ function closeOcrModal(e) {
   prev.src = '';
   prev.classList.add('hidden');
   pendingScan = null;
+}
+
+// ─────────────────────────────────────────
+// IMPORT RELEVÉ DE COMPTE (CSV)
+// ─────────────────────────────────────────
+let pendingImportRows = [];
+
+function openImportModal() {
+  document.getElementById('modal-import').classList.remove('hidden');
+  resetImportModal();
+}
+
+function closeImportModal(e) {
+  if (e && e.target !== document.getElementById('modal-import')) return;
+  document.getElementById('modal-import').classList.add('hidden');
+  resetImportModal();
+}
+
+function resetImportModal() {
+  pendingImportRows = [];
+  document.getElementById('import-step-1').classList.remove('hidden');
+  document.getElementById('import-step-2').classList.add('hidden');
+  document.getElementById('import-tbody').innerHTML = '';
+  document.getElementById('import-count').textContent = '—';
+  document.getElementById('import-input').value = '';
+}
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = ev.target.result;
+    const rows = parseCSV(text);
+    if (!rows.length) { toast('❌ Aucune transaction trouvée dans ce fichier.'); return; }
+    pendingImportRows = rows;
+    const tbody = document.getElementById('import-tbody');
+    tbody.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      const amtCls = r.type === 'income' ? 'income' : 'expense';
+      const sign = r.type === 'income' ? '+' : '-';
+      tr.innerHTML = `<td>${r.date}</td><td>${r.label}</td><td class="td-amt ${amtCls}">${sign}${r.amount.toFixed(2)} €</td><td>${r.category}</td>`;
+      tbody.appendChild(tr);
+    });
+    const count = rows.length;
+    const inc = rows.filter(r => r.type === 'income').length;
+    const exp = rows.filter(r => r.type === 'expense').length;
+    document.getElementById('import-count').innerHTML = `<strong>${count}</strong> transactions trouvées — <span style="color:var(--green)">${inc} entrées</span> · <span style="color:var(--red)">${exp} dépenses</span>`;
+    document.getElementById('import-step-1').classList.add('hidden');
+    document.getElementById('import-step-2').classList.remove('hidden');
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  // Normalise line endings
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  // Detect separator: ; or ,
+  const sep = lines[0].split(';').length > lines[0].split(',').length ? ';' : ',';
+
+  // Parse header
+  const header = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+  // Detect column indices
+  const dateIdx  = header.findIndex(h => /date/.test(h));
+  const labelIdx = header.findIndex(h => /libelle|label|description|intitule|operation|motif/.test(h));
+  const amtIdx   = header.findIndex(h => /^montant$|^amount$|^valeur$/.test(h));
+  const debitIdx = header.findIndex(h => /debit|sortie|credit debiteur|debit/.test(h));
+  const creditIdx= header.findIndex(h => /credit|entree|credit creancier|credit/.test(h));
+
+  // Category keyword map
+  const catMap = [
+    ['Salaire',     /salaire|paie|paye |mensualite/],
+    ['Virement',    /virement|transfert|sepa|prelevement interne/],
+    ['Courses',     /lidl|carrefour|leclerc|monoprix|aldi|intermarche|franprix|super u|casino|picard|biocoop|naturalia|market/],
+    ['Resto',       /mcdo|mcdonald|burger king|quick|kfc|pizza|kebab|resto|restaurant|brasserie|cafe |bistro|sushi|deliveroo|uber eat|just eat/],
+    ['Transport',   /sncf|ratp|navigo|transilien|uber|bolt|taxi|essence|shell|total|bp |station|autoroute|vinci|peage|blablacar/],
+    ['Abonnements', /netflix|spotify|deezer|youtube|disney|prime|canal|sfr|orange|bouygues|free |apple|microsoft|adobe|twitch/],
+    ['Loyer',       /loyer|charges|syndic|agence|immo|fonciere/],
+    ['Santé',       /pharmacie|medecin|docteur|dentiste|mutuelle|secu|ameli|hopital|clinique|sante/],
+    ['Loisirs',     /cinema|cine|concert|fnac|steam|playstation|xbox|gaming|amazon|cdiscount|fnac|decathlon|sport|voyages|booking|airbnb/],
+    ['Vêtements',   /zara|h&m|shein|pull|nike|adidas|lacoste|uniqlo|primark|vetiaire|vetement/],
+    ['Retrait',     /retrait|dab |distributeur/],
+  ];
+
+  function guessCategory(label) {
+    const s = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (const [cat, rx] of catMap) { if (rx.test(s)) return cat; }
+    return 'Autre';
+  }
+
+  function parseDate(raw) {
+    if (!raw) return new Date().toISOString().slice(0, 10);
+    // DD/MM/YYYY or DD-MM-YYYY
+    const m = raw.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+    // YYYY-MM-DD
+    const m2 = raw.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+    if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`;
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function parseAmt(raw) {
+    if (!raw && raw !== 0) return null;
+    const s = String(raw).trim().replace(/\s/g, '').replace(/[€$£]/g, '');
+    // Handle French format: 1 234,56 or 1.234,56
+    const cleaned = s.replace(/\.(?=\d{3})/g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? null : n;
+  }
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const raw = lines[i];
+    if (!raw.trim()) continue;
+
+    // Handle quoted fields with commas inside
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let c = 0; c < raw.length; c++) {
+      const ch = raw[c];
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === sep && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    cols.push(cur.trim());
+
+    const dateRaw  = dateIdx  >= 0 ? cols[dateIdx]  : '';
+    const labelRaw = labelIdx >= 0 ? cols[labelIdx] : cols.slice(1, 3).join(' ');
+    const label    = (labelRaw || 'Transaction').replace(/^"|"$/g, '').trim() || 'Transaction';
+
+    let amount = null, type = 'expense';
+
+    if (amtIdx >= 0) {
+      amount = parseAmt(cols[amtIdx]);
+      if (amount === null) continue;
+      type = amount >= 0 ? 'income' : 'expense';
+      amount = Math.abs(amount);
+    } else if (debitIdx >= 0 || creditIdx >= 0) {
+      const debit  = debitIdx  >= 0 ? parseAmt(cols[debitIdx])  : null;
+      const credit = creditIdx >= 0 ? parseAmt(cols[creditIdx]) : null;
+      if (credit && Math.abs(credit) > 0) { amount = Math.abs(credit); type = 'income'; }
+      else if (debit && Math.abs(debit) > 0) { amount = Math.abs(debit); type = 'expense'; }
+      else continue;
+    } else {
+      // Fallback: look for any numeric column
+      for (let ci = 0; ci < cols.length; ci++) {
+        const n = parseAmt(cols[ci]);
+        if (n !== null && Math.abs(n) > 0) {
+          amount = Math.abs(n); type = n >= 0 ? 'income' : 'expense'; break;
+        }
+      }
+      if (amount === null) continue;
+    }
+
+    if (!amount || amount <= 0) continue;
+
+    rows.push({
+      date: parseDate(dateRaw),
+      label: label.substring(0, 80),
+      amount,
+      type,
+      category: guessCategory(label),
+    });
+  }
+  return rows;
+}
+
+async function confirmImport() {
+  if (!pendingImportRows.length) return;
+  const btn = document.getElementById('import-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Import en cours…';
+
+  let ok = 0, fail = 0;
+  // Batch insert in chunks of 50
+  const CHUNK = 50;
+  for (let i = 0; i < pendingImportRows.length; i += CHUNK) {
+    const chunk = pendingImportRows.slice(i, i + CHUNK).map(r => ({
+      user_id:  currentUser.id,
+      type:     r.type,
+      amount:   r.amount,
+      category: r.category,
+      label:    r.label,
+      date:     r.date + 'T12:00:00.000Z',
+    }));
+    try {
+      const res = await supaFetch('/rest/v1/transactions', { method: 'POST', body: JSON.stringify(chunk) });
+      if (Array.isArray(res)) {
+        res.forEach(tx => allTransactions.push(tx));
+        ok += res.length;
+      } else {
+        fail += chunk.length;
+      }
+    } catch(_) { fail += chunk.length; }
+  }
+
+  // Sort all transactions by date desc
+  allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+  renderAll();
+  closeImportModal();
+  switchTab('flux');
+
+  if (fail === 0) toast(`✅ ${ok} transactions importées !`);
+  else toast(`⚠️ ${ok} ok · ${fail} erreurs`);
+
+  btn.disabled = false;
+  btn.textContent = '✅ Importer toutes les transactions';
 }
 
 // ─────────────────────────────────────────
