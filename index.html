@@ -1535,7 +1535,7 @@ function handleImportFile(e) {
     handleImportPDF(file);
   } else {
     const reader = new FileReader();
-    reader.onload = ev => showImportPreview(parseCSV(ev.target.result));
+    reader.onload = ev => classifyAndPreview(parseCSV(ev.target.result));
     reader.readAsText(file, 'UTF-8');
   }
 }
@@ -1550,7 +1550,6 @@ async function handleImportPDF(file) {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      // Sort items by y then x to reconstruct reading order
       const items = content.items.slice().sort((a, b) => {
         const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
         return dy !== 0 ? dy : a.transform[4] - b.transform[4];
@@ -1564,11 +1563,47 @@ async function handleImportPDF(file) {
       });
       if (line.trim()) fullText += line.trim() + '\n';
     }
-    const rows = parsePDFText(fullText);
-    showImportPreview(rows);
+    await classifyAndPreview(parsePDFText(fullText));
   } catch(err) {
     toast('❌ Erreur lecture PDF : ' + err.message);
   }
+}
+
+async function classifyAndPreview(rows) {
+  if (!rows.length) { toast('❌ Aucune transaction trouvée dans ce fichier.'); return; }
+  toast('🤖 Classification IA en cours…');
+  const CATS = ['Salaire','Job','Virement','Resto','Courses','Transport','Loisirs','Abonnements','Vêtements','Santé','Loyer','Retrait','Autre'];
+  try {
+    const prompt = `Tu es un assistant bancaire. Classifie chaque transaction ci-dessous.
+Réponds UNIQUEMENT avec un JSON array (même ordre, même longueur). Pour chaque élément: {"type":"income" ou "expense","category":"..."}.
+Catégories possibles: ${CATS.join(', ')}.
+
+Transactions:
+${rows.map((r, i) => `${i}: "${r.label}" ${r.amount.toFixed(2)}€`).join('\n')}
+
+Réponds uniquement le JSON, rien d'autre.`;
+
+    const res = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer b8e04e9b46234b8594964cce20af8318', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'glm-4.5-flash', messages: [{ role: 'user', content: prompt }], max_tokens: 2000 })
+    });
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const classifications = JSON.parse(jsonMatch[0]);
+      classifications.forEach((c, i) => {
+        if (rows[i]) {
+          if (c.type === 'income' || c.type === 'expense') rows[i].type = c.type;
+          if (CATS.includes(c.category)) rows[i].category = c.category;
+        }
+      });
+    }
+  } catch(e) {
+    // Fallback silencieux sur la classification regex déjà en place
+  }
+  showImportPreview(rows);
 }
 
 function showImportPreview(rows) {
