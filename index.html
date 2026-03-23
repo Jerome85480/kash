@@ -1535,7 +1535,11 @@ function handleImportFile(e) {
     handleImportPDF(file);
   } else {
     const reader = new FileReader();
-    reader.onload = ev => classifyAndPreview(parseCSV(ev.target.result));
+    reader.onload = async ev => {
+      let rows = parseCSV(ev.target.result);
+      if (!rows.length) rows = await parseWithAI(ev.target.result);
+      classifyAndPreview(rows);
+    };
     reader.readAsText(file, 'UTF-8');
   }
 }
@@ -1557,16 +1561,55 @@ async function handleImportPDF(file) {
       let lastY = null, line = '';
       items.forEach(item => {
         const y = Math.round(item.transform[5]);
-        if (lastY !== null && Math.abs(y - lastY) > 3) { fullText += line.trim() + '\n'; line = ''; }
+        if (lastY !== null && Math.abs(y - lastY) > 5) { fullText += line.trim() + '\n'; line = ''; }
         line += item.str + ' ';
         lastY = y;
       });
       if (line.trim()) fullText += line.trim() + '\n';
     }
-    await classifyAndPreview(parsePDFText(fullText));
+    let rows = parsePDFText(fullText);
+    if (!rows.length) {
+      // Regex parser n'a rien trouvé → on envoie le texte brut à Z.AI
+      rows = await parseWithAI(fullText);
+    }
+    await classifyAndPreview(rows);
   } catch(err) {
     toast('❌ Erreur lecture PDF : ' + err.message);
   }
+}
+
+async function parseWithAI(rawText) {
+  toast('🤖 Z.AI analyse le relevé…');
+  const CATS = ['Salaire','Job','Virement','Resto','Courses','Transport','Loisirs','Abonnements','Vêtements','Santé','Loyer','Retrait','Autre'];
+  const truncated = rawText.slice(0, 6000); // limite tokens
+  const prompt = `Tu es un expert en relevés bancaires français. Extrais toutes les transactions du texte ci-dessous.
+Réponds UNIQUEMENT avec un JSON array. Pour chaque transaction: {"date":"YYYY-MM-DD","label":"libellé","amount":12.34,"type":"income" ou "expense","category":"..."}.
+Catégories: ${CATS.join(', ')}.
+Ignore les soldes, totaux, entêtes. Ne mets que les vraies opérations.
+
+TEXTE DU RELEVÉ:
+${truncated}
+
+Réponds uniquement le JSON array, rien d'autre.`;
+  try {
+    const res = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer b8e04e9b46234b8594964cce20af8318', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'glm-4.5-flash', messages: [{ role: 'user', content: prompt }], max_tokens: 3000 })
+    });
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const m = raw.match(/\[[\s\S]*\]/);
+    if (!m) return [];
+    const parsed = JSON.parse(m[0]);
+    return parsed.filter(r => r.date && r.amount > 0).map(r => ({
+      date: r.date,
+      label: (r.label || 'Transaction').substring(0, 80),
+      amount: parseFloat(r.amount),
+      type: r.type === 'income' ? 'income' : 'expense',
+      category: CATS.includes(r.category) ? r.category : 'Autre'
+    }));
+  } catch(e) { return []; }
 }
 
 async function classifyAndPreview(rows) {
