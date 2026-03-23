@@ -238,6 +238,17 @@
     .scan-result-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:600;margin-bottom:.45rem;}
     .scan-result-val{font-size:.9rem;font-weight:500;color:var(--text);line-height:1.75;}
 
+    /* ── RÉCURRENCE ── */
+    .recurring-toggle{display:flex;align-items:center;gap:.75rem;background:rgba(124,107,255,.06);border:1px solid rgba(124,107,255,.18);border-radius:12px;padding:.7rem 1rem;margin-bottom:.9rem;cursor:pointer;transition:all .2s;user-select:none;}
+    .recurring-toggle:hover{background:rgba(124,107,255,.12);}
+    .recurring-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--violet);cursor:pointer;flex-shrink:0;}
+    .recurring-toggle-text{flex:1;}
+    .recurring-toggle-title{font-size:.84rem;font-weight:600;color:var(--text);}
+    .recurring-toggle-sub{font-size:.72rem;color:var(--text-muted);margin-top:1px;}
+    .tx-recurring-badge{background:rgba(124,107,255,.12);border:1px solid rgba(124,107,255,.22);border-radius:6px;padding:.1rem .35rem;font-size:.62rem;color:var(--violet-light);font-weight:600;flex-shrink:0;margin-right:.2rem;}
+    .recurring-section{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1rem;margin-bottom:.8rem;}
+    .recurring-section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--violet-light);font-weight:600;margin-bottom:.7rem;}
+
     /* ── 6-MONTH CHART ── */
     .six-month-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:1.3rem;margin-bottom:.8rem;}
     .six-month-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.13em;color:var(--text-muted);font-weight:600;margin-bottom:1rem;}
@@ -425,6 +436,10 @@
         <button class="btn-add" onclick="openTxModal()">+ Ajouter</button>
       </div>
     </div>
+    <div class="recurring-section hidden" id="recurring-section">
+      <div class="recurring-section-title">🔄 Récurrentes ce mois</div>
+      <div id="recurring-list"></div>
+    </div>
     <div class="tx-list" id="tx-list"><div class="tx-empty">Aucune transaction ce mois-ci.</div></div>
   </div>
 
@@ -583,6 +598,13 @@
     </div>
     <div class="field"><label>Libellé (optionnel)</label><input type="text" id="tx-label" placeholder="Ex: Netflix, Lidl..."></div>
     <div class="field"><label>Note (optionnel)</label><input type="text" id="tx-note" placeholder="Détails..."></div>
+    <label class="recurring-toggle" onclick="toggleRecurring()">
+      <input type="checkbox" id="tx-recurring" onclick="event.stopPropagation()">
+      <div class="recurring-toggle-text">
+        <div class="recurring-toggle-title">🔄 Transaction récurrente</div>
+        <div class="recurring-toggle-sub">Se recrée automatiquement chaque mois</div>
+      </div>
+    </label>
     <div class="tx-attach-indicator" id="tx-receipt-indicator">📎 <span id="tx-receipt-name">ticket.jpg</span></div>
     <button class="btn-cta" id="tx-save-btn" onclick="saveTx()">Enregistrer →</button>
     <div style="margin-top:.75rem;text-align:center;"><button class="btn-ghost" onclick="closeTxModal()">Annuler</button></div>
@@ -813,6 +835,7 @@ async function initDashboard() {
   document.getElementById('dash-name').textContent = currentUser?.name || currentUser?.email?.split('@')[0] || 'Toi';
   setMonthLabel();
   await Promise.all([loadTransactions(), loadGoals(), loadDebts()]);
+  await setupRecurring();
   renderAll();
   setupNotifications();
 }
@@ -869,6 +892,7 @@ function renderAll() {
 
   renderChart();
   renderTransactions(thisMonth);
+  renderRecurring();
   renderGoals();
   renderDebts();
   renderStats(thisMonth);
@@ -942,6 +966,7 @@ function renderTransactions(txs) {
     const receiptBtn = t.receipt_url
       ? `<button class="tx-receipt-btn" onclick="viewReceipt('${t.receipt_url}')" title="Voir le ticket">📎</button>`
       : '';
+    const recurBadge = t.is_recurring ? `<span class="tx-recurring-badge">🔄</span>` : '';
     return `<div class="tx-item">
       <div class="tx-icon ${t.type}">${icon}</div>
       <div class="tx-info">
@@ -949,7 +974,7 @@ function renderTransactions(txs) {
         <div class="tx-meta">${t.category} · ${date}</div>
       </div>
       <div class="tx-amount ${t.type}">${sign}${fmt(t.amount)} €</div>
-      ${receiptBtn}
+      ${recurBadge}${receiptBtn}
       <button class="tx-delete" onclick="deleteTx('${t.id}')" title="Supprimer">🗑</button>
     </div>`;
   }).join('');
@@ -968,6 +993,7 @@ function openTxModal(prefill = {}) {
   if (prefill.amount) document.getElementById('tx-amount').value = prefill.amount;
   if (prefill.category) document.getElementById('tx-category').value = prefill.category;
   if (prefill.label) document.getElementById('tx-label').value = prefill.label;
+  document.getElementById('tx-recurring').checked = false;
   const indicator = document.getElementById('tx-receipt-indicator');
   if (pendingReceiptFile) {
     indicator.style.display = 'flex';
@@ -976,6 +1002,10 @@ function openTxModal(prefill = {}) {
     indicator.style.display = 'none';
   }
   document.getElementById('modal-tx').classList.remove('hidden');
+}
+function toggleRecurring() {
+  const cb = document.getElementById('tx-recurring');
+  cb.checked = !cb.checked;
 }
 function closeTxModal(e) {
   if (!e || e.target === document.getElementById('modal-tx')) {
@@ -1000,7 +1030,9 @@ async function saveTx() {
     receipt_url = await uploadReceiptToStorage(pendingReceiptFile);
     pendingReceiptFile = null;
   }
-  const tx = { user_id: currentUser.id, type, amount, category, label: label || null, note: note || null, date: new Date().toISOString(), receipt_url };
+  const is_recurring = document.getElementById('tx-recurring').checked;
+  const recurring_day = is_recurring ? new Date().getDate() : null;
+  const tx = { user_id: currentUser.id, type, amount, category, label: label || null, note: note || null, date: new Date().toISOString(), receipt_url, is_recurring, recurring_day };
   const res = await supaFetch('/rest/v1/transactions', { method: 'POST', body: JSON.stringify(tx) });
   if (Array.isArray(res) && res[0]) allTransactions.unshift(res[0]);
   else allTransactions.unshift({ ...tx, id: Date.now().toString() });
@@ -1008,7 +1040,7 @@ async function saveTx() {
   closeTxModal();
   ['tx-amount','tx-label','tx-note'].forEach(id => document.getElementById(id).value = '');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer →'; }
-  toast(receipt_url ? '✅ Transaction + ticket enregistrés !' : '✅ Transaction enregistrée !');
+  toast(receipt_url ? '✅ Transaction + ticket enregistrés !' : is_recurring ? '🔄 Transaction récurrente enregistrée !' : '✅ Transaction enregistrée !');
 }
 
 // ─────────────────────────────────────────
@@ -1769,6 +1801,117 @@ async function confirmImport() {
 
   btn.disabled = false;
   btn.textContent = '✅ Importer toutes les transactions';
+}
+
+// ─────────────────────────────────────────
+// TRANSACTIONS RÉCURRENTES
+// ─────────────────────────────────────────
+async function setupRecurring() {
+  const now = new Date();
+  const thisMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const doneKey = `kash_recur_${currentUser.id}_${thisMonthKey}`;
+  if (localStorage.getItem(doneKey)) return; // already run this month
+
+  const recurring = allTransactions.filter(t => t.is_recurring);
+  if (!recurring.length) return;
+
+  // Find unique recurring templates (by label+category+type+amount)
+  const seen = new Set();
+  const templates = recurring.filter(t => {
+    const k = `${t.type}|${t.amount}|${t.category}|${t.label}`;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+
+  // Check which ones already exist this month
+  const thisMonth = allTransactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+
+  let created = 0;
+  for (const tmpl of templates) {
+    const alreadyExists = thisMonth.some(t =>
+      t.type === tmpl.type &&
+      parseFloat(t.amount) === parseFloat(tmpl.amount) &&
+      t.category === tmpl.category &&
+      t.label === tmpl.label &&
+      t.is_recurring
+    );
+    if (alreadyExists) continue;
+
+    // Create for this month on the same day (or today if past end of month)
+    const day = Math.min(tmpl.recurring_day || 1, new Date(now.getFullYear(), now.getMonth()+1, 0).getDate());
+    const txDate = new Date(now.getFullYear(), now.getMonth(), day);
+    if (txDate > now) continue; // not yet due this month
+
+    const tx = {
+      user_id: currentUser.id,
+      type: tmpl.type,
+      amount: tmpl.amount,
+      category: tmpl.category,
+      label: tmpl.label,
+      note: tmpl.note || null,
+      date: txDate.toISOString(),
+      is_recurring: true,
+      recurring_day: tmpl.recurring_day
+    };
+    try {
+      const res = await supaFetch('/rest/v1/transactions', { method: 'POST', body: JSON.stringify(tx) });
+      if (Array.isArray(res) && res[0]) allTransactions.unshift(res[0]);
+      else allTransactions.unshift({ ...tx, id: Date.now().toString() + created });
+      created++;
+    } catch(e) {}
+  }
+
+  localStorage.setItem(doneKey, '1');
+  if (created > 0) toast(`🔄 ${created} transaction${created>1?'s':''} récurrente${created>1?'s':''} créée${created>1?'s':''} !`);
+}
+
+function renderRecurring() {
+  const recurring = allTransactions.filter(t => t.is_recurring);
+  const section = document.getElementById('recurring-section');
+  const list = document.getElementById('recurring-list');
+  if (!recurring.length) { section.classList.add('hidden'); return; }
+
+  // Show unique templates
+  const seen = new Set();
+  const templates = recurring.filter(t => {
+    const k = `${t.type}|${t.amount}|${t.category}|${t.label}`;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+
+  section.classList.remove('hidden');
+  list.innerHTML = templates.map(t => {
+    const icon = CAT_ICONS[t.category] || '📦';
+    const sign = t.type === 'income' ? '+' : '-';
+    const day = t.recurring_day ? `le ${t.recurring_day} du mois` : 'mensuelle';
+    return `<div class="tx-item" style="margin-bottom:.4rem;">
+      <div class="tx-icon ${t.type}">${icon}</div>
+      <div class="tx-info">
+        <div class="tx-label">${t.label || t.category}</div>
+        <div class="tx-meta">🔄 ${day} · ${t.category}</div>
+      </div>
+      <div class="tx-amount ${t.type}">${sign}${fmt(t.amount)} €</div>
+      <button class="tx-delete" onclick="stopRecurring('${t.id}', '${(t.label||t.category).replace(/'/g,'')}')" title="Arrêter la récurrence">⏹</button>
+    </div>`;
+  }).join('');
+}
+
+async function stopRecurring(id, label) {
+  if (!confirm(`Arrêter la récurrence de "${label}" ?`)) return;
+  // Update all matching recurring transactions to is_recurring = false
+  const matching = allTransactions.filter(t => t.is_recurring && (t.label||t.category) === label);
+  for (const t of matching) {
+    await supaFetch(`/rest/v1/transactions?id=eq.${t.id}`, {
+      method: 'PATCH', headers:{'Prefer':'return=minimal'},
+      body: JSON.stringify({ is_recurring: false, recurring_day: null })
+    });
+    t.is_recurring = false;
+  }
+  renderAll();
+  toast('⏹ Récurrence arrêtée');
 }
 
 // ─────────────────────────────────────────
