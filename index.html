@@ -429,7 +429,11 @@
     <div class="section-header">
       <div>
         <div class="section-title">Transactions</div>
-        <div class="month-filter" id="month-label"></div>
+        <div style="display:flex;align-items:center;gap:.35rem;">
+          <button onclick="changeMonth(-1)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.85rem;padding:0 .15rem;line-height:1;" title="Mois précédent">◀</button>
+          <div class="month-filter" id="month-label"></div>
+          <button onclick="changeMonth(1)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.85rem;padding:0 .15rem;line-height:1;" title="Mois suivant">▶</button>
+        </div>
       </div>
       <div style="display:flex;gap:.5rem;">
         <button class="btn-add" onclick="openImportModal()" title="Importer un relevé de compte">📂 Relevé</button>
@@ -701,7 +705,10 @@ async function supaFetch(path, opts = {}) {
   if (!text) return {};
   let data;
   try { data = JSON.parse(text); } catch(e) { throw new Error('Erreur serveur: ' + text.substring(0, 100)); }
-  if (data && (data.error || data.error_description)) throw new Error(data.error_description || (data.error && data.error.message) || 'Erreur');
+  // Détecte les erreurs Supabase REST (format {code, message}) ET les erreurs auth (error, error_description)
+  if (data && !Array.isArray(data) && (data.error || data.error_description || (data.code && data.message && !res.ok))) {
+    throw new Error(data.error_description || (data.error && (typeof data.error === 'string' ? data.error : data.error.message)) || data.message || 'Erreur Supabase');
+  }
   return data;
 }
 
@@ -829,10 +836,26 @@ setInterval(refreshToken, 50 * 60 * 1000);
 // DASHBOARD INIT
 // ─────────────────────────────────────────
 let allTransactions = [], allGoals = [], allDebts = [];
+let currentMonthOffset = 0; // 0 = mois actuel, -1 = mois précédent, etc.
+
+function changeMonth(delta) {
+  // Empêche de naviguer après le mois actuel
+  if (delta > 0 && currentMonthOffset >= 0) return;
+  currentMonthOffset += delta;
+  renderAll();
+}
+
+function getViewDate() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + currentMonthOffset);
+  return d;
+}
 
 async function initDashboard() {
   showScreen('dashboard');
   document.getElementById('dash-name').textContent = currentUser?.name || currentUser?.email?.split('@')[0] || 'Toi';
+  currentMonthOffset = 0;
   setMonthLabel();
   await Promise.all([loadTransactions(), loadGoals(), loadDebts()]);
   await setupRecurring();
@@ -841,9 +864,12 @@ async function initDashboard() {
 }
 
 function setMonthLabel() {
-  const now = new Date();
-  document.getElementById('month-label').textContent =
-    now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const d = getViewDate();
+  const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  document.getElementById('month-label').textContent = label;
+  // Grise le bouton "suivant" si on est déjà sur le mois actuel
+  const nextBtn = document.querySelector('[onclick="changeMonth(1)"]');
+  if (nextBtn) nextBtn.style.opacity = currentMonthOffset >= 0 ? '0.25' : '1';
 }
 
 // ─────────────────────────────────────────
@@ -874,10 +900,11 @@ async function loadDebts() {
 // RENDER ALL
 // ─────────────────────────────────────────
 function renderAll() {
-  const now = new Date();
+  setMonthLabel();
+  const viewDate = getViewDate();
   const thisMonth = allTransactions.filter(t => {
     const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear();
   });
   const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
   const expense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
@@ -1577,11 +1604,19 @@ function parseCSV(text) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
   // Detect column indices
-  const dateIdx  = header.findIndex(h => /date/.test(h));
-  const labelIdx = header.findIndex(h => /libelle|label|description|intitule|operation|motif/.test(h));
-  const amtIdx   = header.findIndex(h => /^montant$|^amount$|^valeur$/.test(h));
-  const debitIdx = header.findIndex(h => /debit|sortie|credit debiteur|debit/.test(h));
-  const creditIdx= header.findIndex(h => /credit|entree|credit creancier|credit/.test(h));
+  // Pour Revolut : "Started Date" / "Completed Date" → on prend la première colonne date
+  const dateIdx  = header.findIndex(h => /^date$|date operation|date de valeur|started date|completed date|^date /.test(h));
+  // Pour CA : "Libellé", "Libellé simplifié", "Libellé opération" ; Revolut : "Description"
+  const labelIdx = header.findIndex(h => /libelle|label|description|intitule|operation|motif|wording/.test(h));
+  // Colonne montant unique (signé) — Revolut "Amount", CA "Montant"
+  const amtIdx   = header.findIndex(h => /^montant$|^amount$|^valeur$|^montant operation$/.test(h));
+  // Colonnes débit / crédit séparées (CA ancien format)
+  const debitIdx = header.findIndex(h => /^debit$|^debit eur$|sortie|depense/.test(h));
+  const creditIdx= header.findIndex(h => /^credit$|^credit eur$|entree|revenu/.test(h));
+  // Revolut : colonne "State" pour filtrer les transactions annulées
+  const stateIdx = header.findIndex(h => h === 'state');
+  // Revolut : colonne "Type" pour ignorer les frais d'échange internes
+  const typeColIdx = header.findIndex(h => h === 'type');
 
   // Category keyword map
   const catMap = [
@@ -1639,6 +1674,17 @@ function parseCSV(text) {
       cur += ch;
     }
     cols.push(cur.trim());
+
+    // Revolut : ignorer les transactions non-COMPLETED (FAILED, DECLINED, REVERTED…)
+    if (stateIdx >= 0) {
+      const state = (cols[stateIdx] || '').trim().toUpperCase();
+      if (state && state !== 'COMPLETED') continue;
+    }
+    // Revolut : ignorer les échanges de devises internes (EXCHANGE)
+    if (typeColIdx >= 0) {
+      const txType = (cols[typeColIdx] || '').trim().toUpperCase();
+      if (txType === 'EXCHANGE') continue;
+    }
 
     const dateRaw  = dateIdx  >= 0 ? cols[dateIdx]  : '';
     const labelRaw = labelIdx >= 0 ? cols[labelIdx] : cols.slice(1, 3).join(' ');
@@ -1737,15 +1783,29 @@ function parsePDFText(text) {
     const amounts = [...rest.matchAll(AMT_RX)].map(m => parseAmt(m[1])).filter(n => n !== null && Math.abs(n) > 0);
     if (!amounts.length) return;
 
-    // Use last amount as the transaction amount (usually the debit/credit column)
-    const rawAmt = amounts[amounts.length - 1];
-    const amount = Math.abs(rawAmt);
-    const type = rawAmt > 0 ? 'income' : 'expense';
-
     // Label = everything before the first amount, cleaned up
     const labelEnd = rest.search(AMT_RX);
     const labelRaw = (labelEnd > 0 ? rest.slice(0, labelEnd) : rest).trim();
     const label = labelRaw.replace(/\s{2,}/g, ' ').substring(0, 80) || 'Transaction';
+
+    // Détermine le montant et le type (revenu/dépense)
+    // Si 2 montants sur la ligne → format débit/crédit CA (colonne débit en 1er, crédit en 2e)
+    const rawAmt = amounts[amounts.length - 1];
+    const amount = Math.abs(rawAmt);
+    let type;
+    if (rawAmt < 0) {
+      // Montant signé négatif = dépense (Revolut PDF, certaines banques)
+      type = 'expense';
+    } else if (amounts.length >= 2) {
+      // Deux montants sur la ligne : format CA avec colonnes débit + crédit
+      // Le 2e montant (crédit/colonne droite) = revenu ; le 1er (débit) = dépense
+      type = 'income';
+    } else {
+      // Montant non signé unique : heuristique par mots-clés du libellé
+      const lc = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isIncome = /salaire|virement.{0,25}(recu|entrant|credit)|remboursement|allocation|indemnite|avoir|versement|prime /i.test(lc);
+      type = isIncome ? 'income' : 'expense';
+    }
 
     if (amount < 0.01) return;
 
@@ -1785,19 +1845,32 @@ async function confirmImport() {
         res.forEach(tx => allTransactions.push(tx));
         ok += res.length;
       } else {
+        console.error('[Kash] Import chunk failed:', res);
         fail += chunk.length;
       }
-    } catch(_) { fail += chunk.length; }
+    } catch(err) {
+      console.error('[Kash] Import error:', err.message);
+      fail += chunk.length;
+    }
+  }
+
+  // Navigue vers le mois des transactions importées (le plus récent)
+  if (ok > 0 && pendingImportRows.length > 0) {
+    const mostRecentDate = pendingImportRows.reduce((best, r) => r.date > best ? r.date : best, pendingImportRows[0].date);
+    const importDate = new Date(mostRecentDate);
+    const today = new Date();
+    currentMonthOffset = (importDate.getFullYear() - today.getFullYear()) * 12 + (importDate.getMonth() - today.getMonth());
   }
 
   // Sort all transactions by date desc
   allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-  renderAll();
   closeImportModal();
   switchTab('flux');
+  renderAll();
 
-  if (fail === 0) toast(`✅ ${ok} transactions importées !`);
-  else toast(`⚠️ ${ok} ok · ${fail} erreurs`);
+  if (fail === 0) toast(`✅ ${ok} transaction${ok > 1 ? 's' : ''} importée${ok > 1 ? 's' : ''} !`);
+  else if (ok > 0) toast(`⚠️ ${ok} importée${ok > 1 ? 's' : ''} · ${fail} erreur${fail > 1 ? 's' : ''}`);
+  else toast(`❌ Import échoué (${fail} erreur${fail > 1 ? 's' : ''}). Vérifiez la console.`);
 
   btn.disabled = false;
   btn.textContent = '✅ Importer toutes les transactions';
