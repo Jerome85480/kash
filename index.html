@@ -502,13 +502,13 @@
 
 
 <!-- ══ MODAL IMPORT RELEVÉ ══ -->
-<input type="file" id="import-input" accept=".csv,.txt" style="display:none" onchange="handleImportFile(event)">
+<input type="file" id="import-input" accept=".csv,.txt,.pdf" style="display:none" onchange="handleImportFile(event)">
 <div class="modal-overlay hidden center" id="modal-import" onclick="closeImportModal(event)">
   <div class="modal center" onclick="event.stopPropagation()" style="max-width:520px;">
     <div class="modal-title">📂 Importer un relevé</div>
     <div id="import-step-1">
-      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Importe ton relevé bancaire au format <strong style="color:var(--text);">CSV</strong>. Tous les formats sont supportés : Société Générale, BNP, LCL, CIC, Crédit Agricole, etc.</p>
-      <button class="btn-cta" onclick="document.getElementById('import-input').click()">Choisir un fichier CSV →</button>
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Importe ton relevé bancaire en <strong style="color:var(--text);">PDF ou CSV</strong>. Supporté : Crédit Agricole, Revolut, Société Générale, BNP, LCL, CIC, etc.</p>
+      <button class="btn-cta" onclick="document.getElementById('import-input').click()">Choisir un fichier PDF ou CSV →</button>
       <div style="margin-top:.75rem;text-align:center;"><button class="btn-ghost" onclick="closeImportModal()">Annuler</button></div>
     </div>
     <div id="import-step-2" class="hidden">
@@ -1472,29 +1472,64 @@ function resetImportModal() {
 function handleImportFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const text = ev.target.result;
-    const rows = parseCSV(text);
-    if (!rows.length) { toast('❌ Aucune transaction trouvée dans ce fichier.'); return; }
-    pendingImportRows = rows;
-    const tbody = document.getElementById('import-tbody');
-    tbody.innerHTML = '';
-    rows.forEach(r => {
-      const tr = document.createElement('tr');
-      const amtCls = r.type === 'income' ? 'income' : 'expense';
-      const sign = r.type === 'income' ? '+' : '-';
-      tr.innerHTML = `<td>${r.date}</td><td>${r.label}</td><td class="td-amt ${amtCls}">${sign}${r.amount.toFixed(2)} €</td><td>${r.category}</td>`;
-      tbody.appendChild(tr);
-    });
-    const count = rows.length;
-    const inc = rows.filter(r => r.type === 'income').length;
-    const exp = rows.filter(r => r.type === 'expense').length;
-    document.getElementById('import-count').innerHTML = `<strong>${count}</strong> transactions trouvées — <span style="color:var(--green)">${inc} entrées</span> · <span style="color:var(--red)">${exp} dépenses</span>`;
-    document.getElementById('import-step-1').classList.add('hidden');
-    document.getElementById('import-step-2').classList.remove('hidden');
-  };
-  reader.readAsText(file, 'UTF-8');
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    handleImportPDF(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = ev => showImportPreview(parseCSV(ev.target.result));
+    reader.readAsText(file, 'UTF-8');
+  }
+}
+
+async function handleImportPDF(file) {
+  if (typeof pdfjsLib === 'undefined') { toast('❌ PDF.js non chargé, réessaie dans un instant.'); return; }
+  toast('📄 Lecture du PDF…');
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      // Sort items by y then x to reconstruct reading order
+      const items = content.items.slice().sort((a, b) => {
+        const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+        return dy !== 0 ? dy : a.transform[4] - b.transform[4];
+      });
+      let lastY = null, line = '';
+      items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        if (lastY !== null && Math.abs(y - lastY) > 3) { fullText += line.trim() + '\n'; line = ''; }
+        line += item.str + ' ';
+        lastY = y;
+      });
+      if (line.trim()) fullText += line.trim() + '\n';
+    }
+    const rows = parsePDFText(fullText);
+    showImportPreview(rows);
+  } catch(err) {
+    toast('❌ Erreur lecture PDF : ' + err.message);
+  }
+}
+
+function showImportPreview(rows) {
+  if (!rows.length) { toast('❌ Aucune transaction trouvée dans ce fichier.'); return; }
+  pendingImportRows = rows;
+  const tbody = document.getElementById('import-tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const amtCls = r.type === 'income' ? 'income' : 'expense';
+    const sign = r.type === 'income' ? '+' : '-';
+    tr.innerHTML = `<td>${r.date}</td><td>${r.label}</td><td class="td-amt ${amtCls}">${sign}${r.amount.toFixed(2)} €</td><td>${r.category}</td>`;
+    tbody.appendChild(tr);
+  });
+  const count = rows.length;
+  const inc = rows.filter(r => r.type === 'income').length;
+  const exp = rows.filter(r => r.type === 'expense').length;
+  document.getElementById('import-count').innerHTML = `<strong>${count}</strong> transactions trouvées — <span style="color:var(--green)">${inc} entrées</span> · <span style="color:var(--red)">${exp} dépenses</span>`;
+  document.getElementById('import-step-1').classList.add('hidden');
+  document.getElementById('import-step-2').classList.remove('hidden');
 }
 
 function parseCSV(text) {
@@ -1612,6 +1647,86 @@ function parseCSV(text) {
     });
   }
   return rows;
+}
+
+// ─────────────────────────────────────────
+// PDF BANK STATEMENT PARSER
+// ─────────────────────────────────────────
+function parsePDFText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+
+  // Category keyword map (same as CSV parser)
+  const catMap = [
+    ['Salaire',     /salaire|paie|virement salaire|employeur/i],
+    ['Virement',    /virement|transfert|sepa|don /i],
+    ['Courses',     /lidl|carrefour|leclerc|monoprix|aldi|intermarche|franprix|super u|casino|picard|biocoop|market|supermarche/i],
+    ['Resto',       /mcdo|mcdonald|burger|quick|kfc|pizza|kebab|resto|restaurant|brasserie|cafe |bistro|sushi|deliveroo|uber eat|just eat/i],
+    ['Transport',   /sncf|ratp|navigo|transilien|uber|bolt|taxi|essence|shell|total|station|autoroute|vinci|peage|blablacar/i],
+    ['Abonnements', /netflix|spotify|deezer|youtube|disney|prime|canal|sfr|orange|bouygues|free |apple|microsoft|adobe|twitch/i],
+    ['Loyer',       /loyer|charges|syndic|agence|fonciere/i],
+    ['Santé',       /pharmacie|medecin|docteur|dentiste|mutuelle|secu|ameli|hopital|clinique/i],
+    ['Loisirs',     /cinema|concert|fnac|steam|playstation|xbox|gaming|amazon|cdiscount|decathlon|booking|airbnb/i],
+    ['Vêtements',   /zara|h&m|shein|nike|adidas|uniqlo|primark|vetiaire/i],
+    ['Retrait',     /retrait|dab |distributeur/i],
+  ];
+  function guessCategory(label) {
+    const s = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    for (const [cat, rx] of catMap) { if (rx.test(s)) return cat; }
+    return 'Autre';
+  }
+  function parseDate(raw) {
+    const m = raw.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+    if (m) { const y = m[3].length===2?'20'+m[3]:m[3]; return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; }
+    return null;
+  }
+  function parseAmt(s) {
+    const c = s.replace(/\s/g,'').replace(/[€$£]/g,'').replace(/\.(?=\d{3})/g,'').replace(',','.');
+    const n = parseFloat(c);
+    return isNaN(n) ? null : n;
+  }
+
+  // Amount pattern: optionally signed, 1-6 digits, comma/dot, 2 decimals, optional €
+  const AMT_RX = /([+-]?\s?\d{1,6}[,. ]\d{2})\s*€?/g;
+  // Date pattern at start of line
+  const DATE_RX = /^(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+/;
+
+  const rows = [];
+
+  lines.forEach(line => {
+    // Must contain a date
+    const dateM = line.match(DATE_RX);
+    if (!dateM) return;
+    const date = parseDate(dateM[1]);
+    if (!date) return;
+
+    const rest = line.slice(dateM[0].length);
+
+    // Find all amounts in the line
+    const amounts = [...rest.matchAll(AMT_RX)].map(m => parseAmt(m[1])).filter(n => n !== null && Math.abs(n) > 0);
+    if (!amounts.length) return;
+
+    // Use last amount as the transaction amount (usually the debit/credit column)
+    const rawAmt = amounts[amounts.length - 1];
+    const amount = Math.abs(rawAmt);
+    const type = rawAmt > 0 ? 'income' : 'expense';
+
+    // Label = everything before the first amount, cleaned up
+    const labelEnd = rest.search(AMT_RX);
+    const labelRaw = (labelEnd > 0 ? rest.slice(0, labelEnd) : rest).trim();
+    const label = labelRaw.replace(/\s{2,}/g, ' ').substring(0, 80) || 'Transaction';
+
+    if (amount < 0.01) return;
+
+    rows.push({ date, label, amount, type, category: guessCategory(label) });
+  });
+
+  // Deduplicate by date+label+amount
+  const seen = new Set();
+  return rows.filter(r => {
+    const key = `${r.date}|${r.label}|${r.amount}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
 }
 
 async function confirmImport() {
@@ -1874,6 +1989,8 @@ function toast(msg) {
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
