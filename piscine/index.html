@@ -6,7 +6,7 @@
 <title>Piscine Avenue — Visualisez votre piscine</title>
 <meta name="description" content="Projetez une piscine coque Génération Piscine sur la photo de votre terrain. Choisissez le modèle, la couleur des margelles et de la terrasse. Rendu photoréaliste par IA.">
 <meta name="theme-color" content="#1c4d80">
-<link rel="icon" href="/assets/logo.jpg">
+<link rel="icon" href="assets/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -152,7 +152,7 @@
 <body>
 <header>
   <div class="hd">
-    <img src="/assets/logo.jpg" alt="Piscine Avenue">
+    <img src="assets/logo.jpg" alt="Piscine Avenue">
     <div>
       <div class="ti">Piscine Avenue</div>
       <div class="su">Projetez votre piscine en photo</div>
@@ -302,7 +302,7 @@ function handleFile(f){
 
 /* ============ STEP 2: models ============ */
 let MODELS=[], curGamme='Tous';
-fetch('/data/models.json').then(r=>r.json()).then(d=>{ MODELS=d; buildTabs(); renderModels(); })
+fetch('data/models.json').then(r=>r.json()).then(d=>{ MODELS=d; buildTabs(); renderModels(); })
   .catch(()=>{ $('#grid').innerHTML='<p style="color:var(--muted);font-size:.85rem">Impossible de charger le catalogue.</p>'; });
 
 function buildTabs(){
@@ -371,7 +371,7 @@ async function generate(){
   $('#gen').disabled=true;
   $('#s4').scrollIntoView({behavior:'smooth',block:'center'});
   try{
-    const res=await fetch('/api/render',{
+    const res=await fetch('api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
     });
