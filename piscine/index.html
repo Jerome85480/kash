@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Piscine Avenue — Visualisez votre piscine</title>
+<meta name="description" content="Projetez une piscine coque Génération Piscine sur la photo de votre terrain. Choisissez le modèle, la couleur des margelles et de la terrasse. Rendu photoréaliste par IA.">
+<meta name="theme-color" content="#1c4d80">
+<link rel="icon" href="/assets/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1c4d80; --navy-dark:#143659; --orange:#e8732a; --orange-light:#f4914f;
+    --teal:#3a93a8; --sky:#eaf4fb; --sky2:#d4e9f7;
+    --ink:#1a2b3c; --muted:#6b8095; --line:#d8e6f0; --card:#ffffff;
+    --ok:#2fae6b; --err:#e0524a;
+    --shadow:0 10px 40px rgba(28,77,128,.10); --shadow-lg:0 20px 60px rgba(28,77,128,.18);
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',sans-serif;color:var(--ink);min-height:100vh;
+    background:linear-gradient(180deg,#f4fafe 0%,#e7f3fb 100%);background-attachment:fixed;}
+  h1,h2,h3,.brandfont{font-family:'Poppins',sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 1rem 5rem;}
+
+  /* HEADER */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(255,255,255,.82);border-bottom:1px solid var(--line);}
+  .hd{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:.8rem;padding:.7rem 1rem;}
+  .hd img{height:44px;width:auto;border-radius:8px;}
+  .hd .ti{font-family:'Poppins';font-weight:700;font-size:1.02rem;color:var(--navy);line-height:1.1;}
+  .hd .su{font-size:.72rem;color:var(--muted);font-weight:500;}
+  .hd .badge{margin-left:auto;font-size:.66rem;font-weight:700;color:var(--teal);
+    background:rgba(58,147,168,.10);border:1px solid rgba(58,147,168,.25);padding:.3rem .6rem;border-radius:100px;white-space:nowrap;}
+
+  /* HERO */
+  .hero{text-align:center;padding:2.2rem 0 1.4rem;}
+  .hero h1{font-size:1.9rem;font-weight:800;color:var(--navy);letter-spacing:-.5px;line-height:1.15;}
+  .hero h1 .o{color:var(--orange);}
+  .hero p{color:var(--muted);font-size:.98rem;margin-top:.6rem;max-width:560px;margin-inline:auto;line-height:1.55;}
+
+  /* STEPS */
+  .step{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:1.4rem 1.3rem;
+    margin-bottom:1.1rem;box-shadow:var(--shadow);}
+  .step.lock{opacity:.55;pointer-events:none;filter:saturate(.6);}
+  .step-h{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem;}
+  .step-n{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--teal));
+    color:#fff;font-weight:700;font-family:'Poppins';display:grid;place-items:center;font-size:.9rem;box-shadow:0 4px 12px rgba(28,77,128,.3);}
+  .step-h h2{font-size:1.08rem;font-weight:700;color:var(--ink);}
+  .step-h .done{margin-left:auto;color:var(--ok);font-size:1.2rem;display:none;}
+  .step.ok .step-h .done{display:block;}
+  .hint{font-size:.82rem;color:var(--muted);margin-top:-.4rem;margin-bottom:.9rem;}
+
+  /* UPLOAD */
+  .drop{border:2px dashed var(--sky2);border-radius:18px;background:linear-gradient(180deg,#fbfdff,#f1f8fd);
+    padding:2rem 1rem;text-align:center;cursor:pointer;transition:.22s;}
+  .drop:hover,.drop.drag{border-color:var(--orange);background:#fff7f1;}
+  .drop svg{width:46px;height:46px;color:var(--navy);opacity:.7;margin-bottom:.5rem;}
+  .drop b{display:block;color:var(--navy);font-weight:600;font-size:.96rem;}
+  .drop span{font-size:.8rem;color:var(--muted);}
+  .preview{position:relative;border-radius:16px;overflow:hidden;display:none;box-shadow:var(--shadow);}
+  .preview img{width:100%;display:block;max-height:340px;object-fit:cover;}
+  .preview .chg{position:absolute;top:.6rem;right:.6rem;background:rgba(255,255,255,.92);border:none;
+    border-radius:100px;padding:.45rem .9rem;font-size:.78rem;font-weight:600;color:var(--navy);cursor:pointer;box-shadow:var(--shadow);}
+
+  /* MODELS */
+  .tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.6rem;margin-bottom:.4rem;-webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{height:0;}
+  .tab{flex-shrink:0;border:1px solid var(--line);background:#fff;color:var(--muted);
+    border-radius:100px;padding:.42rem .85rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:.18s;white-space:nowrap;}
+  .tab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .search{width:100%;border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem;font-family:inherit;
+    font-size:.9rem;margin-bottom:.9rem;outline:none;color:var(--ink);background:#fbfdff;}
+  .search:focus{border-color:var(--teal);background:#fff;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:.7rem;max-height:430px;overflow-y:auto;padding:.2rem;}
+  .mcard{border:2px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:.18s;position:relative;}
+  .mcard:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:var(--shadow);}
+  .mcard.on{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,115,42,.18);}
+  .mcard .imw{aspect-ratio:1/1;background:#f3f8fc;display:grid;place-items:center;padding:.4rem;}
+  .mcard .imw img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;}
+  .mcard .mi{padding:.5rem .6rem .6rem;}
+  .mcard .mn{font-weight:700;font-size:.82rem;color:var(--navy);line-height:1.15;}
+  .mcard .md{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
+  .mcard.on::after{content:'✓';position:absolute;top:.4rem;right:.4rem;background:var(--orange);color:#fff;
+    width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;}
+
+  /* COLOR OPTIONS */
+  .opt-group{margin-bottom:1.1rem;}
+  .opt-group > label{display:block;font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:.55rem;}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;}
+  .chip{display:flex;align-items:center;gap:.45rem;border:1.5px solid var(--line);background:#fff;
+    border-radius:100px;padding:.4rem .8rem .4rem .45rem;font-size:.82rem;font-weight:600;color:var(--ink);cursor:pointer;transition:.16s;}
+  .chip:hover{border-color:var(--teal);}
+  .chip.on{border-color:var(--navy);background:#f0f7fd;}
+  .sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+
+  /* CTA */
+  .cta{width:100%;margin-top:.4rem;background:linear-gradient(135deg,var(--orange),var(--orange-light));
+    color:#fff;border:none;border-radius:15px;padding:1.05rem;font-family:'Poppins';font-size:1rem;font-weight:700;
+    cursor:pointer;transition:.25s;box-shadow:0 10px 26px rgba(232,115,42,.34);display:flex;align-items:center;justify-content:center;gap:.55rem;}
+  .cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(232,115,42,.42);}
+  .cta:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;background:#9fb3c4;}
+  .summary{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:.7rem;line-height:1.5;}
+  .summary b{color:var(--navy);}
+
+  /* RESULT */
+  #result{display:none;}
+  .cmp{position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow-lg);user-select:none;touch-action:none;background:#000;}
+  .cmp img{display:block;width:100%;pointer-events:none;}
+  .cmp .after{position:absolute;inset:0;overflow:hidden;width:50%;border-right:3px solid #fff;}
+  .cmp .after img{height:100%;width:auto;max-width:none;}
+  .cmp .hdl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;
+    background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);display:grid;place-items:center;cursor:ew-resize;color:var(--navy);font-weight:700;}
+  .cmp .tagb,.cmp .taga{position:absolute;bottom:.7rem;font-size:.66rem;font-weight:700;color:#fff;
+    background:rgba(0,0,0,.5);padding:.25rem .6rem;border-radius:100px;backdrop-filter:blur(4px);}
+  .cmp .tagb{left:.7rem;} .cmp .taga{right:.7rem;}
+  .res-actions{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1rem;}
+  .res-actions button{border-radius:13px;padding:.85rem;font-family:'Poppins';font-weight:700;font-size:.9rem;cursor:pointer;border:none;transition:.2s;}
+  .btn-dl{background:var(--navy);color:#fff;} .btn-dl:hover{background:var(--navy-dark);}
+  .btn-re{background:#fff;color:var(--navy);border:1.5px solid var(--line)!important;} .btn-re:hover{border-color:var(--teal)!important;}
+  .btn-new{grid-column:1/-1;background:transparent;color:var(--muted);font-weight:600!important;}
+
+  /* LOADER */
+  .loader{display:none;text-align:center;padding:2.4rem 1rem;}
+  .loader.on{display:block;}
+  .ring{width:54px;height:54px;border:4px solid var(--sky2);border-top-color:var(--orange);border-radius:50%;
+    margin:0 auto 1rem;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loader p{color:var(--navy);font-weight:600;}
+  .loader span{font-size:.8rem;color:var(--muted);}
+
+  .err{background:#fdeceb;border:1px solid #f6c9c5;color:var(--err);border-radius:12px;padding:.8rem 1rem;
+    font-size:.85rem;margin-top:.8rem;display:none;font-weight:500;}
+
+  /* HISTORY */
+  .hist{margin-top:.5rem;}
+  .hist h3{font-size:.92rem;color:var(--navy);font-weight:700;margin-bottom:.7rem;}
+  .hrow{display:flex;gap:.6rem;overflow-x:auto;padding-bottom:.5rem;}
+  .hrow img{height:84px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow);flex-shrink:0;border:2px solid transparent;}
+  .hrow img:hover{border-color:var(--orange);}
+
+  footer{text-align:center;color:var(--muted);font-size:.74rem;padding:2rem 1rem;line-height:1.6;}
+  footer a{color:var(--navy);text-decoration:none;font-weight:600;}
+  .toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(120px);
+    background:var(--navy);color:#fff;padding:.7rem 1.3rem;border-radius:100px;font-size:.85rem;font-weight:600;
+    z-index:999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);box-shadow:var(--shadow-lg);}
+  .toast.on{transform:translateX(-50%) translateY(0);}
+  @media(max-width:520px){ .hero h1{font-size:1.55rem;} .step{padding:1.15rem 1rem;border-radius:18px;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <img src="/assets/logo.jpg" alt="Piscine Avenue">
+    <div>
+      <div class="ti">Piscine Avenue</div>
+      <div class="su">Projetez votre piscine en photo</div>
+    </div>
+    <div class="badge">Modèles Génération Piscine</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Visualisez votre piscine <span class="o">sur votre terrain</span></h1>
+    <p>Importez la photo de votre jardin, choisissez votre modèle de coque Génération Piscine, vos margelles et votre terrasse. L'IA génère un rendu photoréaliste en quelques secondes.</p>
+  </div>
+
+  <!-- STEP 1 — PHOTO -->
+  <section class="step" id="s1">
+    <div class="step-h"><div class="step-n">1</div><h2>Votre terrain</h2><div class="done">✓</div></div>
+    <p class="hint">Prenez une photo dégagée de l'emplacement souhaité (vue large, de jour).</p>
+    <div class="drop" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 16.5V18a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-1.5M12 3v13m0-13 4 4m-4-4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <b>Importer une photo</b>
+      <span>cliquez, déposez un fichier, ou prenez une photo</span>
+    </div>
+    <input type="file" id="file" accept="image/*" capture="environment" hidden>
+    <div class="preview" id="preview"><img id="previmg" alt="Terrain"><button class="chg" id="chg">Changer</button></div>
+  </section>
+
+  <!-- STEP 2 — MODEL -->
+  <section class="step lock" id="s2">
+    <div class="step-h"><div class="step-n">2</div><h2>Le modèle de piscine</h2><div class="done">✓</div></div>
+    <div class="tabs" id="tabs"></div>
+    <input class="search" id="search" placeholder="Rechercher un modèle (ex. Pomarègue, Capitole…)">
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- STEP 3 — COLORS -->
+  <section class="step lock" id="s3">
+    <div class="step-h"><div class="step-n">3</div><h2>Margelles, terrasse & eau</h2><div class="done">✓</div></div>
+    <div class="opt-group"><label>Couleur de la coque & de l'eau</label><div class="chips" id="optEau"></div></div>
+    <div class="opt-group"><label>Margelles</label><div class="chips" id="optMarg"></div></div>
+    <div class="opt-group"><label>Terrasse autour de la piscine</label><div class="chips" id="optTer"></div></div>
+  </section>
+
+  <!-- STEP 4 — GENERATE -->
+  <section class="step lock" id="s4">
+    <div class="step-h"><div class="step-n">4</div><h2>Générer le rendu</h2></div>
+    <p class="summary" id="summary"></p>
+    <button class="cta" id="gen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5 9-11" style="display:none"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m13.5-6.5-2 2m-7 7-2 2m11 0-2-2m-7-7-2-2" stroke-linecap="round"/></svg>Créer mon rendu photoréaliste</button>
+    <div class="err" id="err"></div>
+
+    <div class="loader" id="loader"><div class="ring"></div><p>Création de votre piscine…</p><span>L'IA compose le rendu, cela prend ~15 à 30 secondes.</span></div>
+
+    <div id="result">
+      <div class="cmp" id="cmp">
+        <img id="imgBefore" alt="Avant">
+        <div class="after"><img id="imgAfter" alt="Après"></div>
+        <div class="tagb">Avant</div><div class="taga">Après</div>
+        <div class="hdl" id="hdl">⇆</div>
+      </div>
+      <div class="res-actions">
+        <button class="btn-dl" id="dl">⬇ Télécharger</button>
+        <button class="btn-re" id="regen">↻ Régénérer</button>
+        <button class="btn-new" id="newp">Nouveau projet</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="hist" id="hist" style="display:none">
+    <h3>Vos rendus récents</h3>
+    <div class="hrow" id="hrow"></div>
+  </div>
+
+  <footer>
+    <b>Piscine Avenue</b> — Pisciniste, La Roche-sur-Yon (Vendée).<br>
+    Piscines coque polyester <a href="https://www.generationpiscine.com" target="_blank" rel="noopener">Génération Piscine</a>.
+    Rendus générés par IA, à titre indicatif.
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ DATA: color options ============ */
+const EAU = [
+  {id:'blanc', label:'Coque blanche', sw:'#bfe6f0', p:'coque de couleur blanche, eau bleu turquoise clair et lumineux'},
+  {id:'gris-clair', label:'Gris clair', sw:'#cdd6db', p:'coque gris clair, eau bleu lagon clair'},
+  {id:'gris-perle', label:'Gris perle', sw:'#aab8c2', p:'coque gris perle, eau bleu-vert lagon'},
+  {id:'anthracite', label:'Gris anthracite', sw:'#4a5560', p:'coque gris anthracite foncé, eau bleu profond légèrement gris-bleu'},
+  {id:'bleu', label:'Bleu', sw:'#2f6fb0', p:'coque bleue, eau bleu classique éclatant'},
+  {id:'sable', label:'Sable', sw:'#d8c6a0', p:'coque couleur sable, eau vert d\'eau lagon translucide'}
+];
+const MARG = [
+  {id:'blanc', label:'Blanc', sw:'#f3f1ec', p:'margelles blanches'},
+  {id:'gris-clair', label:'Gris clair', sw:'#cfd4d6', p:'margelles gris clair'},
+  {id:'anthracite', label:'Anthracite', sw:'#48505a', p:'margelles gris anthracite'},
+  {id:'beige', label:'Beige / sable', sw:'#d9c7a3', p:'margelles beige sable'},
+  {id:'pierre', label:'Pierre naturelle', sw:'#c9bfa8', p:'margelles en pierre naturelle reconstituée'},
+  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'margelles en travertin clair'}
+];
+const TER = [
+  {id:'bois', label:'Bois exotique', sw:'#a9743f', p:'terrasse en lames de bois exotique'},
+  {id:'composite-gris', label:'Composite gris', sw:'#7d8589', p:'terrasse en lames composite gris'},
+  {id:'dallage-clair', label:'Dallage clair', sw:'#dcd6c8', p:'terrasse en dallage pierre claire'},
+  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'terrasse en travertin'},
+  {id:'beton', label:'Béton lissé', sw:'#bcbcb8', p:'terrasse en béton lissé clair'},
+  {id:'gazon', label:'Gazon', sw:'#6fa04a', p:'pourtour engazonné (pelouse) sans terrasse maçonnée'}
+];
+
+const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], result:null };
+
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
+
+/* ============ STEP 1: upload ============ */
+const drop=$('#drop'), file=$('#file');
+drop.onclick=()=>file.click();
+$('#chg').onclick=()=>file.click();
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('drag');}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('drag');}));
+drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
+file.onchange=()=>{ if(file.files[0]) handleFile(file.files[0]); };
+
+function handleFile(f){
+  if(!f.type.startsWith('image/')){ toast('Choisissez une image'); return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=1568; let {width:w,height:h}=img;
+      if(Math.max(w,h)>max){ const k=max/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      state.photo=c.toDataURL('image/jpeg',0.92);
+      state.photoMime='image/jpeg';
+      $('#previmg').src=state.photo;
+      $('#preview').style.display='block'; drop.style.display='none';
+      $('#s1').classList.add('ok');
+      $('#s2').classList.remove('lock');
+      refreshGate();
+      $('#s2').scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    img.src=r.result;
+  };
+  r.readAsDataURL(f);
+}
+
+/* ============ STEP 2: models ============ */
+let MODELS=[], curGamme='Tous';
+fetch('/data/models.json').then(r=>r.json()).then(d=>{ MODELS=d; buildTabs(); renderModels(); })
+  .catch(()=>{ $('#grid').innerHTML='<p style="color:var(--muted);font-size:.85rem">Impossible de charger le catalogue.</p>'; });
+
+function buildTabs(){
+  const gammes=['Tous',...[...new Set(MODELS.map(m=>m.gamme))].sort()];
+  $('#tabs').innerHTML=gammes.map(g=>`<button class="tab${g==='Tous'?' on':''}" data-g="${g}">${g}</button>`).join('');
+  $('#tabs').querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+    curGamme=t.dataset.g; $('#tabs').querySelectorAll('.tab').forEach(x=>x.classList.remove('on')); t.classList.add('on'); renderModels();
+  });
+}
+$('#search').oninput=renderModels;
+function renderModels(){
+  const q=$('#search').value.trim().toLowerCase();
+  const list=MODELS.filter(m=>(curGamme==='Tous'||m.gamme===curGamme)&&(!q||m.nom.toLowerCase().includes(q)||m.gamme.toLowerCase().includes(q)));
+  $('#grid').innerHTML=list.map(m=>{
+    const dim=m.longueur?`${m.longueur}×${m.largeur} m · `:'';
+    return `<div class="mcard${state.model&&state.model.id===m.id?' on':''}" data-id="${m.id}">
+      <div class="imw"><img loading="lazy" src="${m.image}" alt="${m.nom}" onerror="this.style.display='none'"></div>
+      <div class="mi"><div class="mn">${m.nom}</div><div class="md">${dim}${m.forme}</div></div></div>`;
+  }).join('')||'<p style="color:var(--muted);font-size:.85rem;padding:1rem">Aucun modèle.</p>';
+  $('#grid').querySelectorAll('.mcard').forEach(c=>c.onclick=()=>{
+    state.model=MODELS.find(m=>m.id===c.dataset.id);
+    renderModels(); $('#s2').classList.add('ok'); $('#s3').classList.remove('lock'); refreshGate();
+    toast('Modèle : '+state.model.nom);
+  });
+}
+
+/* ============ STEP 3: colors ============ */
+function buildChips(host,arr,key){
+  const el=$(host);
+  el.innerHTML=arr.map(o=>`<div class="chip${state[key].id===o.id?' on':''}" data-id="${o.id}"><span class="sw" style="background:${o.sw}"></span>${o.label}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    state[key]=arr.find(o=>o.id===c.dataset.id);
+    el.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); refreshGate();
+  });
+}
+buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter');
+
+/* ============ gate / summary ============ */
+function refreshGate(){
+  const ready=state.photo&&state.model;
+  $('#s4').classList.toggle('lock',!ready);
+  $('#gen').disabled=!ready;
+  if(state.model){
+    $('#s3').classList.add('ok');
+    $('#summary').innerHTML=`Piscine <b>${state.model.nom}</b> · eau <b>${state.eau.label}</b> · margelles <b>${state.marg.label}</b> · terrasse <b>${state.ter.label}</b>`;
+  }
+}
+
+/* ============ prompt ============ */
+function buildPrompt(){
+  const m=state.model;
+  const dim=m.longueur?` d'environ ${m.longueur} m sur ${m.largeur} m`:'';
+  return `Tu es un expert en photomontage et architecture paysagère. Sur cette photographie d'un jardin/terrain, intègre une piscine coque enterrée, modèle « ${m.nom} » de la marque Génération Piscine, de forme ${m.forme.toLowerCase()}${dim}. `
+   +`Place la piscine au sol de façon réaliste dans l'espace disponible, creusée et au niveau du terrain. `
+   +`Rendu strictement photoréaliste : respecte la perspective, l'échelle, la profondeur de champ, l'éclairage, les ombres portées et les reflets de la scène d'origine. `
+   +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
+   +`Conserve la maison, la clôture, la végétation et tout l'arrière-plan existants exactement à l'identique ; modifie uniquement la zone d'implantation de la piscine. `
+   +`Le résultat doit ressembler à une vraie photographie haute résolution du jardin une fois la piscine installée. N'ajoute aucun texte ni filigrane.`;
+}
+
+/* ============ generate ============ */
+async function generate(){
+  $('#err').style.display='none';
+  $('#result').style.display='none';
+  $('#loader').classList.add('on');
+  $('#gen').disabled=true;
+  $('#s4').scrollIntoView({behavior:'smooth',block:'center'});
+  try{
+    const res=await fetch('/api/render',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Erreur de génération');
+    if(!data.imageBase64) throw new Error("L'IA n'a pas renvoyé d'image. Réessayez avec une autre photo.");
+    state.result='data:'+(data.mimeType||'image/png')+';base64,'+data.imageBase64;
+    showResult();
+    saveHistory();
+  }catch(e){
+    $('#err').textContent='⚠ '+e.message; $('#err').style.display='block';
+  }finally{
+    $('#loader').classList.remove('on'); $('#gen').disabled=false;
+  }
+}
+$('#gen').onclick=generate;
+$('#regen').onclick=generate;
+
+function showResult(){
+  $('#imgBefore').src=state.photo;
+  $('#imgAfter').src=state.result;
+  $('#result').style.display='block';
+  setSlider(50);
+  $('#result').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* before/after slider */
+function setSlider(pct){
+  pct=Math.max(0,Math.min(100,pct));
+  $('.after').style.width=pct+'%';
+  $('#hdl').style.left=pct+'%';
+}
+(function(){
+  const cmp=$('#cmp'); let drag=false;
+  const move=x=>{ const r=cmp.getBoundingClientRect(); setSlider((x-r.left)/r.width*100); };
+  const start=()=>drag=true; const end=()=>drag=false;
+  cmp.addEventListener('mousedown',e=>{start();move(e.clientX);});
+  window.addEventListener('mousemove',e=>{if(drag)move(e.clientX);});
+  window.addEventListener('mouseup',end);
+  cmp.addEventListener('touchstart',e=>{start();move(e.touches[0].clientX);},{passive:true});
+  cmp.addEventListener('touchmove',e=>{if(drag)move(e.touches[0].clientX);},{passive:true});
+  window.addEventListener('touchend',end);
+})();
+
+/* download */
+$('#dl').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=state.result; a.download='piscine-avenue-'+(state.model?state.model.id:'rendu')+'.png'; a.click();
+};
+$('#newp').onclick=()=>{ location.reload(); };
+
+/* ============ history (localStorage) ============ */
+function saveHistory(){
+  try{
+    const h=JSON.parse(localStorage.getItem('pa_hist')||'[]');
+    h.unshift({img:state.result,model:state.model?state.model.nom:'',t:Date.now()});
+    localStorage.setItem('pa_hist',JSON.stringify(h.slice(0,8)));
+    renderHistory();
+  }catch(e){}
+}
+function renderHistory(){
+  let h=[]; try{h=JSON.parse(localStorage.getItem('pa_hist')||'[]');}catch(e){}
+  if(!h.length){ $('#hist').style.display='none'; return; }
+  $('#hist').style.display='block';
+  $('#hrow').innerHTML=h.map((x,i)=>`<img src="${x.img}" title="${x.model}" data-i="${i}">`).join('');
+  $('#hrow').querySelectorAll('img').forEach(im=>im.onclick=()=>{
+    state.result=h[im.dataset.i].img; showResult(); $('#s4').classList.remove('lock');
+  });
+}
+renderHistory();
+</script>
+</body>
+</html>
