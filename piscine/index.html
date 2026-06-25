@@ -371,11 +371,18 @@ async function generate(){
   $('#gen').disabled=true;
   $('#s4').scrollIntoView({behavior:'smooth',block:'center'});
   try{
-    const res=await fetch('api/render',{
+    const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
     });
-    const data=await res.json();
+    const rawTxt=await res.text();
+    let data;
+    try{ data=JSON.parse(rawTxt); }
+    catch(_){
+      throw new Error(res.status===404
+        ? "Moteur de rendu introuvable : déploiement non finalisé (variable GEMINI_API_KEY à ajouter sur Vercel)."
+        : "Réponse inattendue du serveur ("+res.status+"). Réessayez dans un instant.");
+    }
     if(!res.ok) throw new Error(data.error||'Erreur de génération');
     if(!data.imageBase64) throw new Error("L'IA n'a pas renvoyé d'image. Réessayez avec une autre photo.");
     state.result='data:'+(data.mimeType||'image/png')+';base64,'+data.imageBase64;
