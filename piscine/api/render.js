@@ -1,0 +1,81 @@
+// Vercel serverless function — proxy vers Google Gemini 2.5 Flash Image (« nano-banana »).
+// La clé reste côté serveur (variable d'environnement GEMINI_API_KEY).
+// Reçoit { imageBase64, mimeType, prompt } et renvoie { imageBase64, mimeType }.
+
+const MODEL = 'gemini-2.5-flash-image';
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Méthode non autorisée.' });
+    return;
+  }
+
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    res.status(500).json({ error: "Le service de rendu n'est pas encore configuré (clé API manquante). Contactez l'administrateur." });
+    return;
+  }
+
+  try {
+    // Le body peut arriver déjà parsé (Vercel) ou en string.
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const { imageBase64, mimeType, prompt } = body;
+
+    if (!imageBase64 || !prompt) {
+      res.status(400).json({ error: 'Photo ou description manquante.' });
+      return;
+    }
+
+    const payload = {
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: prompt },
+          { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
+        ]
+      }],
+      generationConfig: { responseModalities: ['IMAGE'] }
+    };
+
+    const r = await fetch(`${ENDPOINT}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await r.json();
+
+    if (!r.ok) {
+      const msg = (data && data.error && data.error.message) || 'Erreur du service de génération.';
+      // Messages plus clairs pour les cas fréquents.
+      let friendly = msg;
+      if (/quota|RESOURCE_EXHAUSTED/i.test(msg)) friendly = "Quota du service IA atteint. Réessayez dans un moment.";
+      else if (/API key|API_KEY_INVALID|PERMISSION/i.test(msg)) friendly = "Clé API invalide ou non autorisée pour ce modèle.";
+      else if (/SAFETY|blocked/i.test(msg)) friendly = "La génération a été bloquée pour cette image. Essayez une autre photo.";
+      res.status(r.status).json({ error: friendly });
+      return;
+    }
+
+    // Extraire la première image renvoyée par le modèle.
+    const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    const imgPart = parts.find(p => (p.inline_data && p.inline_data.data) || (p.inlineData && p.inlineData.data));
+
+    if (!imgPart) {
+      const txt = parts.map(p => p.text).filter(Boolean).join(' ');
+      res.status(502).json({ error: txt ? ('Le modèle a répondu sans image : ' + txt.slice(0, 160)) : "Aucune image générée. Réessayez." });
+      return;
+    }
+
+    const inline = imgPart.inline_data || imgPart.inlineData;
+    res.status(200).json({
+      imageBase64: inline.data,
+      mimeType: inline.mime_type || inline.mimeType || 'image/png'
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Erreur interne : ' + (e.message || 'inconnue') });
+  }
+}
+
+// Autoriser des payloads d'image volumineux.
+export const config = { api: { bodyParser: { sizeLimit: '12mb' } } };

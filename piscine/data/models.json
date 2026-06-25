@@ -1,0 +1,592 @@
+[
+  {
+    "id": "capitole-4",
+    "nom": "Capitole 4",
+    "gamme": "Capitole",
+    "forme": "Rectangulaire",
+    "longueur": 5,
+    "largeur": 2,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/capitole-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-capitole-4/"
+  },
+  {
+    "id": "capitole-5",
+    "nom": "Capitole 5",
+    "gamme": "Capitole",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/capitole-5-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-capitole-5/"
+  },
+  {
+    "id": "capitole-6",
+    "nom": "Capitole 6",
+    "gamme": "Capitole",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/capitole-6-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-capitole-6/"
+  },
+  {
+    "id": "capitole-7",
+    "nom": "Capitole 7",
+    "gamme": "Capitole",
+    "forme": "Rectangulaire",
+    "longueur": 7,
+    "largeur": 3,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/capitole-5-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-capitole-7/"
+  },
+  {
+    "id": "capitole-8",
+    "nom": "Capitole 8",
+    "gamme": "Capitole",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/capitole-6-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-capitole-8/"
+  },
+  {
+    "id": "divine-100",
+    "nom": "Divine 100",
+    "gamme": "Divine",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/divine-100-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-divine-100/"
+  },
+  {
+    "id": "divine-60",
+    "nom": "Divine 60",
+    "gamme": "Divine",
+    "forme": "Rectangulaire",
+    "longueur": 6,
+    "largeur": 4,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/divine-60-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-divine-60/"
+  },
+  {
+    "id": "divine-80",
+    "nom": "Divine 80",
+    "gamme": "Divine",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/divine-80-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-divine-80/"
+  },
+  {
+    "id": "elegance",
+    "nom": "Élégance",
+    "gamme": "Élégance",
+    "forme": "Fond progressif",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/elegance-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-elegance/"
+  },
+  {
+    "id": "elegance-s",
+    "nom": "Élégance S",
+    "gamme": "Élégance",
+    "forme": "Fond progressif",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/elegance-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-elegance-s/"
+  },
+  {
+    "id": "elegance-xl",
+    "nom": "Élégance Xl",
+    "gamme": "Élégance",
+    "forme": "Fond incliné",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/elegance-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-elegance-xl/"
+  },
+  {
+    "id": "etonnante-85",
+    "nom": "Étonnante 85",
+    "gamme": "Étonnante",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/etonnante-85-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-etonnante-85/"
+  },
+  {
+    "id": "etonnante-95",
+    "nom": "Étonnante 95",
+    "gamme": "Étonnante",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/etonnante-95-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-etonnante-95/"
+  },
+  {
+    "id": "extra-45",
+    "nom": "Extra 45",
+    "gamme": "Extra",
+    "forme": "Rectangulaire",
+    "longueur": 4,
+    "largeur": 2,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/extra-45-46-73-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-extra-45/"
+  },
+  {
+    "id": "extra-70",
+    "nom": "Extra 70",
+    "gamme": "Extra",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/extra-70-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-extra-70/"
+  },
+  {
+    "id": "extra-80",
+    "nom": "Extra 80",
+    "gamme": "Extra",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/extra-80-90-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-extra-80/"
+  },
+  {
+    "id": "extra-90",
+    "nom": "Extra 90",
+    "gamme": "Extra",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/extra-80-90-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-extra-90/"
+  },
+  {
+    "id": "levant-4",
+    "nom": "Levant 4",
+    "gamme": "Levant",
+    "forme": "Rectangulaire",
+    "longueur": 4,
+    "largeur": 3,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/levant-4-a.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-levant-4/"
+  },
+  {
+    "id": "levant-6",
+    "nom": "Levant 6",
+    "gamme": "Levant",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/levant-6-a.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-levant-6/"
+  },
+  {
+    "id": "levant-7",
+    "nom": "Levant 7",
+    "gamme": "Levant",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/levant-7-a.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-levant-7/"
+  },
+  {
+    "id": "levant-8",
+    "nom": "Levant 8",
+    "gamme": "Levant",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/levant-8-a.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-levant-8/"
+  },
+  {
+    "id": "auron",
+    "nom": "Auron",
+    "gamme": "Plage",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/auron-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/modele-auron/"
+  },
+  {
+    "id": "canet-plage",
+    "nom": "Canet Plage",
+    "gamme": "Plage",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/gruissan-canet-leucate-carry-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/modele-canet-plage/"
+  },
+  {
+    "id": "carry-plage",
+    "nom": "Carry Plage",
+    "gamme": "Plage",
+    "forme": "Carrée",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/gruissan-canet-leucate-carry-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/modele-carry-plage/"
+  },
+  {
+    "id": "gruissan-plage",
+    "nom": "Gruissan Plage",
+    "gamme": "Plage",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/gruissan-canet-leucate-carry-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/modele-gruissan-plage/"
+  },
+  {
+    "id": "leucate-plage",
+    "nom": "Leucate Plage",
+    "gamme": "Plage",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/gruissan-canet-leucate-carry-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/modele-leucate-plage/"
+  },
+  {
+    "id": "prado-plage",
+    "nom": "Prado Plage",
+    "gamme": "Prado Plage",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/prado-plage-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-prado-plage/"
+  },
+  {
+    "id": "prado-plage-s",
+    "nom": "Prado Plage S",
+    "gamme": "Prado Plage",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/prado-plage-s-devis-a.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-prado-plage-s/"
+  },
+  {
+    "id": "prado-plage-xl",
+    "nom": "Prado Plage Xl",
+    "gamme": "Prado Plage",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/prado-plage-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-prado-plage-xl/"
+  },
+  {
+    "id": "baie-lava",
+    "nom": "Baie Lava",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/baie-lava-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-baie-lava/"
+  },
+  {
+    "id": "bendor",
+    "nom": "Bendor",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/bendor-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-bendor/"
+  },
+  {
+    "id": "cala",
+    "nom": "Cala",
+    "gamme": "Signature",
+    "forme": "Fond progressif",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/cala-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-cala/"
+  },
+  {
+    "id": "callelongue",
+    "nom": "Callelongue",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/callelongue-devis-1.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-callelongue/"
+  },
+  {
+    "id": "charmante",
+    "nom": "Charmante",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": 5,
+    "largeur": 3,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/charmante-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-charmante/"
+  },
+  {
+    "id": "corniche",
+    "nom": "Corniche",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/corniche-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-corniche/"
+  },
+  {
+    "id": "devenson",
+    "nom": "Devenson",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/devenson-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-devenson/"
+  },
+  {
+    "id": "en-vau",
+    "nom": "En Vau",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/en-vau-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-en-vau/"
+  },
+  {
+    "id": "figuerolle",
+    "nom": "Figuerolle",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": 8,
+    "largeur": 4,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/figuerolle-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-figuerolle/"
+  },
+  {
+    "id": "fontagne",
+    "nom": "Fontagne",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/fontagne-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-fontagne/"
+  },
+  {
+    "id": "giens",
+    "nom": "Giens",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/giens-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-giens/"
+  },
+  {
+    "id": "inizan",
+    "nom": "Inizan",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/inizan-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-inizan/"
+  },
+  {
+    "id": "maxi-carre",
+    "nom": "Maxi Carrée",
+    "gamme": "Signature",
+    "forme": "Carrée",
+    "longueur": 5,
+    "largeur": 5,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/maxi-carre-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-maxi-carre/"
+  },
+  {
+    "id": "mejean",
+    "nom": "Méjean",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mejean-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mejean/"
+  },
+  {
+    "id": "mignonne",
+    "nom": "Mignonne",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": 4,
+    "largeur": 2,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mignonne-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mignonne/"
+  },
+  {
+    "id": "mini",
+    "nom": "Mini",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mini-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mini/"
+  },
+  {
+    "id": "mini-carre",
+    "nom": "Mini Carré",
+    "gamme": "Signature",
+    "forme": "Carrée",
+    "longueur": 3,
+    "largeur": 3,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mini-carre-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mini-carre/"
+  },
+  {
+    "id": "mont-joly",
+    "nom": "Mont Joly",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": 6,
+    "largeur": 3,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mont-blanc-joly-ventoux-louis-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mont-joly/"
+  },
+  {
+    "id": "mont-louis",
+    "nom": "Mont Louis",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/mont-blanc-joly-ventoux-louis-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-mont-louis/"
+  },
+  {
+    "id": "podestat",
+    "nom": "Podestat",
+    "gamme": "Signature",
+    "forme": "Fond plat",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/podestat-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-podestat/"
+  },
+  {
+    "id": "pomaregue",
+    "nom": "Pomarègue",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/pomaregue-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-pomaregue/"
+  },
+  {
+    "id": "porquerolles",
+    "nom": "Porquerolles",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/porquerolle-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-porquerolles/"
+  },
+  {
+    "id": "port-cros",
+    "nom": "Port Cros",
+    "gamme": "Signature",
+    "forme": "Ovale",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/port-cros-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-port-cros/"
+  },
+  {
+    "id": "port-pin",
+    "nom": "Port Pin",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/port-pin-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-port-pin/"
+  },
+  {
+    "id": "sugiton",
+    "nom": "Sugiton",
+    "gamme": "Signature",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/sugiton-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-sugiton/"
+  },
+  {
+    "id": "classik",
+    "nom": "Classik",
+    "gamme": "Sport & Bien-être",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/sport-bien-etre-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/piscine-polyester-sport-fitness-classik/"
+  },
+  {
+    "id": "couloir-mini",
+    "nom": "Couloir Mini",
+    "gamme": "Sport & Bien-être",
+    "forme": "Rectangulaire",
+    "longueur": 5,
+    "largeur": 2,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/couloir-mini-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/coque-piscine-polyester-couloir-mini/"
+  },
+  {
+    "id": "dyptik",
+    "nom": "Dyptik",
+    "gamme": "Sport & Bien-être",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/sport-bien-etre-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/piscine-polyester-sport-fitness-dyptik/"
+  },
+  {
+    "id": "infinity",
+    "nom": "Infinity",
+    "gamme": "Sport & Bien-être",
+    "forme": "Couloir de nage",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/infinity-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/piscine-couloir-de-nage-coque-infinity/"
+  },
+  {
+    "id": "symetrik",
+    "nom": "Symetrik",
+    "gamme": "Sport & Bien-être",
+    "forme": "Rectangulaire",
+    "longueur": null,
+    "largeur": null,
+    "image": "https://www.generationpiscine.com/wp-content/uploads/sport-bien-etre-devis.jpg",
+    "url": "https://www.generationpiscine.com/piscines-coque/piscine-polyester-sport-fitness-symetrik/"
+  }
+]
