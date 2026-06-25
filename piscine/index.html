@@ -355,9 +355,11 @@ function refreshGate(){
 function buildPrompt(){
   const m=state.model;
   const dim=m.longueur?` d'environ ${m.longueur} m sur ${m.largeur} m`:'';
-  return `Tu es un expert en photomontage et architecture paysagère. Sur cette photographie d'un jardin/terrain, intègre une piscine coque enterrée, modèle « ${m.nom} » de la marque Génération Piscine, de forme ${m.forme.toLowerCase()}${dim}. `
-   +`Place la piscine au sol de façon réaliste dans l'espace disponible, creusée et au niveau du terrain. `
-   +`Rendu strictement photoréaliste : respecte la perspective, l'échelle, la profondeur de champ, l'éclairage, les ombres portées et les reflets de la scène d'origine. `
+  return `Tu es un expert en photomontage paysager et architecture extérieure. `
+   +`IMAGE 1 = la photographie d'un jardin/terrain. IMAGE 2 = le plan technique vu de dessus du modèle de piscine EXACT à installer : « ${m.nom} » (gamme ${m.gamme}), forme ${m.forme.toLowerCase()}${dim}, de la marque Génération Piscine. `
+   +`Installe dans le jardin (image 1) cette piscine coque creusée en reproduisant FIDÈLEMENT la forme, les proportions et l'emplacement des escaliers/plage indiqués par le plan (image 2). `
+   +`Rends-la comme une VRAIE piscine vue en perspective dans le jardin : ne copie pas le style dessin/plan, n'affiche aucune vue de dessus ni schéma. `
+   +`Strictement photoréaliste : respecte la perspective, l'échelle, la profondeur, l'éclairage, les ombres portées et les reflets de la scène d'origine, au niveau du sol. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
    +`Conserve la maison, la clôture, la végétation et tout l'arrière-plan existants exactement à l'identique ; modifie uniquement la zone d'implantation de la piscine. `
    +`Le résultat doit ressembler à une vraie photographie haute résolution du jardin une fois la piscine installée. N'ajoute aucun texte ni filigrane.`;
@@ -373,7 +375,7 @@ async function generate(){
   try{
     const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
+      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt(), modelImageUrl: state.model.image })
     });
     const rawTxt=await res.text();
     let data;

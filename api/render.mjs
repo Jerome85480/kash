@@ -19,21 +19,35 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { imageBase64, mimeType, prompt } = body;
+    const { imageBase64, mimeType, prompt, modelImageUrl } = body;
 
     if (!imageBase64 || !prompt) {
       res.status(400).json({ error: 'Photo ou description manquante.' });
       return;
     }
 
+    // IMAGE 1 = photo du terrain. IMAGE 2 (optionnelle) = plan du modèle, récupéré
+    // côté serveur (évite les soucis CORS depuis le navigateur).
+    const parts = [
+      { text: prompt },
+      { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
+    ];
+
+    if (modelImageUrl && /^https:\/\/(www\.)?generationpiscine\.com\//.test(modelImageUrl)) {
+      try {
+        const imgRes = await fetch(modelImageUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0 Safari/537.36' }
+        });
+        if (imgRes.ok) {
+          const buf = Buffer.from(await imgRes.arrayBuffer());
+          const ct = imgRes.headers.get('content-type') || 'image/jpeg';
+          parts.push({ inline_data: { mime_type: ct, data: buf.toString('base64') } });
+        }
+      } catch (_) { /* on continue sans la référence si le fetch échoue */ }
+    }
+
     const payload = {
-      contents: [{
-        role: 'user',
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
-        ]
-      }],
+      contents: [{ role: 'user', parts }],
       generationConfig: { responseModalities: ['IMAGE'] }
     };
 
@@ -55,11 +69,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
-    const imgPart = parts.find(p => (p.inline_data && p.inline_data.data) || (p.inlineData && p.inlineData.data));
+    const respParts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    const imgPart = respParts.find(p => (p.inline_data && p.inline_data.data) || (p.inlineData && p.inlineData.data));
 
     if (!imgPart) {
-      const txt = parts.map(p => p.text).filter(Boolean).join(' ');
+      const txt = respParts.map(p => p.text).filter(Boolean).join(' ');
       res.status(502).json({ error: txt ? ('Le modèle a répondu sans image : ' + txt.slice(0, 160)) : "Aucune image générée. Réessayez." });
       return;
     }
