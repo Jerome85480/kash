@@ -1,5 +1,5 @@
-// Vercel serverless function — proxy vers Google Gemini 2.5 Flash Image (« nano-banana »).
-// La clé reste côté serveur (variable d'environnement GEMINI_API_KEY).
+// Vercel serverless function (racine) — proxy vers Google Gemini 2.5 Flash Image (« nano-banana »).
+// Sert l'app piscine (/piscine). La clé reste côté serveur (env GEMINI_API_KEY) — JAMAIS dans le code.
 // Reçoit { imageBase64, mimeType, prompt } et renvoie { imageBase64, mimeType }.
 
 const MODEL = 'gemini-2.5-flash-image';
@@ -13,12 +13,11 @@ export default async function handler(req, res) {
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    res.status(500).json({ error: "Le service de rendu n'est pas encore configuré (clé API manquante). Contactez l'administrateur." });
+    res.status(500).json({ error: "Le moteur de rendu n'est pas encore configuré : ajoutez la variable d'environnement GEMINI_API_KEY dans les réglages Vercel du projet, puis redéployez." });
     return;
   }
 
   try {
-    // Le body peut arriver déjà parsé (Vercel) ou en string.
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const { imageBase64, mimeType, prompt } = body;
 
@@ -48,7 +47,6 @@ export default async function handler(req, res) {
 
     if (!r.ok) {
       const msg = (data && data.error && data.error.message) || 'Erreur du service de génération.';
-      // Messages plus clairs pour les cas fréquents.
       let friendly = msg;
       if (/quota|RESOURCE_EXHAUSTED/i.test(msg)) friendly = "Quota du service IA atteint. Réessayez dans un moment.";
       else if (/API key|API_KEY_INVALID|PERMISSION/i.test(msg)) friendly = "Clé API invalide ou non autorisée pour ce modèle.";
@@ -57,7 +55,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Extraire la première image renvoyée par le modèle.
     const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
     const imgPart = parts.find(p => (p.inline_data && p.inline_data.data) || (p.inlineData && p.inlineData.data));
 
@@ -76,6 +73,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Erreur interne : ' + (e.message || 'inconnue') });
   }
 }
-
-// Autoriser des payloads d'image volumineux.
-export const config = { api: { bodyParser: { sizeLimit: '12mb' } } };
