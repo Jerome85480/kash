@@ -1,4 +1,4 @@
-const CACHE = 'kash-v8';
+const CACHE = 'kash-v9';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -17,6 +17,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('supabase.co')) return; // always network for API
+  const url = e.request.url;
+  // Toujours le réseau (jamais de cache) pour l'API et toute l'app piscine.
+  if (url.includes('supabase.co') || url.includes('/piscine') || url.includes('/api/')) return;
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
