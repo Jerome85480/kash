@@ -59,6 +59,10 @@
   .drop svg{width:46px;height:46px;color:var(--navy);opacity:.7;margin-bottom:.5rem;}
   .drop b{display:block;color:var(--navy);font-weight:600;font-size:.96rem;}
   .drop span{font-size:.8rem;color:var(--muted);}
+  .drop-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:.9rem;}
+  .src-btn{background:var(--navy);color:#fff;border:none;border-radius:12px;padding:.7rem 1.05rem;font-family:'Poppins';font-weight:700;font-size:.85rem;cursor:pointer;transition:.2s;}
+  .src-btn:hover{background:var(--navy-dark);}
+  .src-btn.alt{background:#fff;color:var(--navy);border:1.5px solid var(--line);}
   .preview{position:relative;border-radius:16px;overflow:hidden;display:none;box-shadow:var(--shadow);}
   .preview img{width:100%;display:block;max-height:340px;object-fit:cover;}
   .preview .prev-actions{position:absolute;top:.6rem;right:.6rem;display:flex;gap:.4rem;}
@@ -176,9 +180,14 @@
     <p class="hint">Prenez une photo dégagée de l'emplacement souhaité (vue large, de jour).</p>
     <div class="drop" id="drop">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 16.5V18a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-1.5M12 3v13m0-13 4 4m-4-4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <b>Importer une photo</b>
-      <span>cliquez, déposez un fichier, ou prenez une photo</span>
+      <b>Photo du terrain</b>
+      <span>Choisissez la source de l'image :</span>
+      <div class="drop-btns">
+        <button type="button" class="src-btn" id="btnCam">📷 Appareil photo</button>
+        <button type="button" class="src-btn alt" id="btnFile">🖼️ Galerie / Fichiers</button>
+      </div>
     </div>
+    <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
       <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg del" id="del">Supprimer</button></div>
@@ -303,11 +312,12 @@ const $ = s => document.querySelector(s);
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
 
 /* ============ STEP 1: upload ============ */
-const drop=$('#drop'), file=$('#file');
-drop.onclick=()=>file.click();
+const drop=$('#drop'), file=$('#file'), fileCam=$('#fileCam');
+$('#btnCam').onclick=()=>fileCam.click();
+$('#btnFile').onclick=()=>file.click();
 $('#chg').onclick=()=>file.click();
 $('#del').onclick=()=>{
-  state.photo=null; file.value='';
+  state.photo=null; file.value=''; fileCam.value='';
   $('#preview').style.display='none'; drop.style.display='block';
   $('#s1').classList.remove('ok');
   refreshGate();
@@ -317,12 +327,15 @@ $('#del').onclick=()=>{
 ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('drag');}));
 drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
 file.onchange=()=>{ if(file.files[0]) handleFile(file.files[0]); };
+fileCam.onchange=()=>{ if(fileCam.files[0]) handleFile(fileCam.files[0]); };
 
 function handleFile(f){
-  if(!f.type.startsWith('image/')){ toast('Choisissez une image'); return; }
+  if(!f) return;
   const r=new FileReader();
+  r.onerror=()=>toast('Impossible de lire ce fichier');
   r.onload=()=>{
     const img=new Image();
+    img.onerror=()=>toast("Format non supporté — essayez un JPG ou PNG");
     img.onload=()=>{
       const max=1568; let {width:w,height:h}=img;
       if(Math.max(w,h)>max){ const k=max/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
