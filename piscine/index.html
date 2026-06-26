@@ -344,7 +344,7 @@ function handleFile(f){
 
 /* ============ STEP 2: models ============ */
 let MODELS=[], curGamme='Tous';
-fetch('data/models.json').then(r=>r.json()).then(d=>{ MODELS=d; buildTabs(); renderModels(); })
+fetch('data/models.json?v=8',{cache:'no-store'}).then(r=>r.json()).then(d=>{ MODELS=d; buildTabs(); renderModels(); })
   .catch(()=>{ $('#grid').innerHTML='<p style="color:var(--muted);font-size:.85rem">Impossible de charger le catalogue.</p>'; });
 
 function buildTabs(){
