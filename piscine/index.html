@@ -61,8 +61,10 @@
   .drop span{font-size:.8rem;color:var(--muted);}
   .preview{position:relative;border-radius:16px;overflow:hidden;display:none;box-shadow:var(--shadow);}
   .preview img{width:100%;display:block;max-height:340px;object-fit:cover;}
-  .preview .chg{position:absolute;top:.6rem;right:.6rem;background:rgba(255,255,255,.92);border:none;
+  .preview .prev-actions{position:absolute;top:.6rem;right:.6rem;display:flex;gap:.4rem;}
+  .preview .chg{background:rgba(255,255,255,.94);border:none;
     border-radius:100px;padding:.45rem .9rem;font-size:.78rem;font-weight:600;color:var(--navy);cursor:pointer;box-shadow:var(--shadow);}
+  .preview .del{color:var(--err);}
 
   /* MODELS */
   .tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.6rem;margin-bottom:.4rem;-webkit-overflow-scrolling:touch;}
@@ -175,8 +177,10 @@
       <b>Importer une photo</b>
       <span>cliquez, déposez un fichier, ou prenez une photo</span>
     </div>
-    <input type="file" id="file" accept="image/*" capture="environment" hidden>
-    <div class="preview" id="preview"><img id="previmg" alt="Terrain"><button class="chg" id="chg">Changer</button></div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="preview" id="preview"><img id="previmg" alt="Terrain">
+      <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg del" id="del">Supprimer</button></div>
+    </div>
   </section>
 
   <!-- STEP 2 — MODEL -->
@@ -193,6 +197,7 @@
     <div class="opt-group"><label>Couleur de la coque & de l'eau</label><div class="chips" id="optEau"></div></div>
     <div class="opt-group"><label>Margelles</label><div class="chips" id="optMarg"></div></div>
     <div class="opt-group"><label>Terrasse autour de la piscine</label><div class="chips" id="optTer"></div></div>
+    <div class="opt-group"><label>Taille de la piscine sur le terrain</label><div class="chips" id="optTaille"></div></div>
   </section>
 
   <!-- STEP 4 — GENERATE -->
@@ -260,7 +265,13 @@ const TER = [
   {id:'gazon', label:'Gazon', sw:'#6fa04a', p:'pourtour engazonné (pelouse) sans terrasse maçonnée'}
 ];
 
-const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], result:null };
+const TAILLE = [
+  {id:'compacte', label:'Compacte', sw:'#bcdcea', p:'Dimensionne la piscine plutôt petite, occupant une partie modeste du terrain disponible.'},
+  {id:'standard', label:'Standard', sw:'#7fb7d6', p:''},
+  {id:'grande', label:'Grande', sw:'#3f93a8', p:"Dimensionne la piscine généreusement, occupant une large partie de l'espace disponible."}
+];
+
+const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], result:null };
 
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
@@ -270,6 +281,13 @@ function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); 
 const drop=$('#drop'), file=$('#file');
 drop.onclick=()=>file.click();
 $('#chg').onclick=()=>file.click();
+$('#del').onclick=()=>{
+  state.photo=null; file.value='';
+  $('#preview').style.display='none'; drop.style.display='block';
+  $('#s1').classList.remove('ok');
+  refreshGate();
+  $('#s1').scrollIntoView({behavior:'smooth',block:'start'});
+};
 ['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('drag');}));
 drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
@@ -337,7 +355,7 @@ function buildChips(host,arr,key){
     el.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); refreshGate();
   });
 }
-buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter');
+buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
 
 /* ============ gate / summary ============ */
 function refreshGate(){
@@ -346,7 +364,7 @@ function refreshGate(){
   $('#gen').disabled=!ready;
   if(state.model){
     $('#s3').classList.add('ok');
-    $('#summary').innerHTML=`Piscine <b>${state.model.nom}</b> · eau <b>${state.eau.label}</b> · margelles <b>${state.marg.label}</b> · terrasse <b>${state.ter.label}</b>`;
+    $('#summary').innerHTML=`Piscine <b>${state.model.nom}</b> · taille <b>${state.taille.label}</b> · eau <b>${state.eau.label}</b> · margelles <b>${state.marg.label}</b> · terrasse <b>${state.ter.label}</b>`;
   }
 }
 
@@ -360,6 +378,7 @@ function buildPrompt(){
    +`Rends-la comme une VRAIE piscine vue en perspective cohérente avec la photo : ne copie pas le style dessin/plan, n'affiche aucune vue de dessus ni schéma. `
    +`Strictement photoréaliste : respecte la perspective, l'échelle, la profondeur, l'éclairage, les ombres portées et les reflets de la scène d'origine, au niveau du sol. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
+   +(state.taille.p?(state.taille.p+' '):'')
    +`Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. Résultat haute résolution, sans texte ni filigrane.`;
 }
 
