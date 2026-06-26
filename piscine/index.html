@@ -121,6 +121,8 @@
   .btn-dl{background:var(--navy);color:#fff;} .btn-dl:hover{background:var(--navy-dark);}
   .btn-re{background:#fff;color:var(--navy);border:1.5px solid var(--line)!important;} .btn-re:hover{border-color:var(--teal)!important;}
   .btn-new{grid-column:1/-1;background:transparent;color:var(--muted);font-weight:600!important;}
+  .btn-share{grid-column:1/-1;background:linear-gradient(135deg,#2bb673,#1e9e63);color:#fff;}
+  .btn-share:hover{filter:brightness(1.06);}
 
   /* LOADER */
   .loader{display:none;text-align:center;padding:2.4rem 1rem;}
@@ -198,6 +200,9 @@
     <div class="opt-group"><label>Margelles</label><div class="chips" id="optMarg"></div></div>
     <div class="opt-group"><label>Terrasse autour de la piscine</label><div class="chips" id="optTer"></div></div>
     <div class="opt-group"><label>Taille de la piscine sur le terrain</label><div class="chips" id="optTaille"></div></div>
+    <div class="opt-group"><label>Options de la piscine <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optOptions"></div></div>
+    <div class="opt-group"><label>Ambiance / moment</label><div class="chips" id="optAmbiance"></div></div>
+    <div class="opt-group"><label>Aménagements autour <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optAmenag"></div></div>
   </section>
 
   <!-- STEP 4 — GENERATE -->
@@ -217,6 +222,7 @@
         <div class="hdl" id="hdl">⇆</div>
       </div>
       <div class="res-actions">
+        <button class="btn-share" id="share">📤 Envoyer au client</button>
         <button class="btn-dl" id="dl">⬇ Télécharger</button>
         <button class="btn-re" id="regen">↻ Régénérer</button>
         <button class="btn-new" id="newp">Nouveau projet</button>
@@ -271,7 +277,26 @@ const TAILLE = [
   {id:'grande', label:'Grande', sw:'#3f93a8', p:"Dimensionne la piscine généreusement, occupant une large partie de l'espace disponible."}
 ];
 
-const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], result:null };
+const OPTIONS = [
+  {id:'volet', label:'Volet immergé', sw:'#9fb6c6', p:'un volet roulant immergé (banquette en bout de bassin)'},
+  {id:'plage', label:'Plage immergée', sw:'#bcdcea', p:"une plage immergée (large marche d'eau peu profonde)"},
+  {id:'escalier', label:"Escalier d'angle", sw:'#cdd6db', p:"un escalier d'angle intégré"},
+  {id:'led', label:'Éclairage LED', sw:'#ffd56b', p:'un éclairage LED immergé dans le bassin'},
+  {id:'cac', label:'Nage à contre-courant', sw:'#7fb7d6', p:'une nage à contre-courant'}
+];
+const AMBIANCE = [
+  {id:'jour', label:'Jour ensoleillé', sw:'#9ed8f5', p:''},
+  {id:'coucher', label:'Coucher de soleil', sw:'#f4a261', p:"Scène à l'heure dorée du coucher de soleil : lumière chaude et rasante, ombres longues, ciel orangé."},
+  {id:'nuit', label:'Nuit éclairée', sw:'#26344a', p:"Scène de nuit : piscine illuminée de l'intérieur par un éclairage LED, reflets sur l'eau, éclairage de jardin tamisé, ambiance nocturne chaleureuse."}
+];
+const AMENAG = [
+  {id:'transats', label:'Transats', sw:'#d9c7a3', p:'des transats / bains de soleil au bord de la piscine'},
+  {id:'poolhouse', label:'Pool house', sw:'#b08968', p:'un pool house élégant à proximité'},
+  {id:'vegetation', label:'Végétation', sw:'#6fa04a', p:'une végétation méditerranéenne soignée (palmiers, massifs)'},
+  {id:'douche', label:'Douche ext.', sw:'#9aa7b0', p:'une douche extérieure design'}
+];
+
+const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null };
 
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
@@ -355,7 +380,17 @@ function buildChips(host,arr,key){
     el.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); refreshGate();
   });
 }
+function buildChipsMulti(host,arr,key){
+  const el=$(host); const has=id=>state[key].some(o=>o.id===id);
+  el.innerHTML=arr.map(o=>`<div class="chip${has(o.id)?' on':''}" data-id="${o.id}"><span class="sw" style="background:${o.sw}"></span>${o.label}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const o=arr.find(x=>x.id===c.dataset.id);
+    state[key]= has(o.id) ? state[key].filter(x=>x.id!==o.id) : [...state[key],o];
+    c.classList.toggle('on'); refreshGate();
+  });
+}
 buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
+buildChipsMulti('#optOptions',OPTIONS,'options'); buildChips('#optAmbiance',AMBIANCE,'ambiance'); buildChipsMulti('#optAmenag',AMENAG,'amenag');
 
 /* ============ gate / summary ============ */
 function refreshGate(){
@@ -379,7 +414,13 @@ function buildPrompt(){
    +`Strictement photoréaliste : respecte la perspective, l'échelle, la profondeur, l'éclairage, les ombres portées et les reflets de la scène d'origine, au niveau du sol. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
    +(state.taille.p?(state.taille.p+' '):'')
-   +`Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. Résultat haute résolution, sans texte ni filigrane.`;
+   +(state.options.length?('La piscine comporte : '+state.options.map(o=>o.p).join(', ')+'. '):'')
+   +(state.amenag.length?('Ajoute autour de la piscine : '+state.amenag.map(o=>o.p).join(', ')+'. '):'')
+   +(state.ambiance.p?(state.ambiance.p+' '):'')
+   +(state.ambiance.id==='jour'
+       ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
+       : `Conserve la composition et les éléments existants (maison, clôtures, cadrage), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
+   +`Résultat haute résolution, sans texte ni filigrane.`;
 }
 
 /* ============ generate ============ */
@@ -442,11 +483,73 @@ function setSlider(pct){
   window.addEventListener('touchend',end);
 })();
 
-/* download */
-$('#dl').onclick=()=>{
-  const a=document.createElement('a');
-  a.href=state.result; a.download='piscine-avenue-'+(state.model?state.model.id:'rendu')+'.png'; a.click();
+/* ============ fiche client (image brandée) + partage ============ */
+const logoImg=new Image(); logoImg.src='assets/logo.jpg';
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+
+async function composeFiche(){
+  const img=new Image();
+  img.src=state.result;
+  await (img.decode ? img.decode().catch(()=>{}) : Promise.resolve());
+  if(!img.naturalWidth) await new Promise(r=>{img.onload=r;img.onerror=r;});
+  try{ await document.fonts.ready; }catch(_){}
+  const W=img.naturalWidth||1024, H=img.naturalHeight||1024;
+  const band=Math.round(W*0.17), pad=Math.round(band*0.18);
+  const c=document.createElement('canvas'); c.width=W; c.height=H+band;
+  const x=c.getContext('2d');
+  x.drawImage(img,0,0,W,H);
+  x.fillStyle='#143659'; x.fillRect(0,H,W,band);
+  x.fillStyle='#e8732a'; x.fillRect(0,H,W,Math.max(3,Math.round(W*0.004)));
+  // logo sur carré blanc
+  const ls=band-pad*2;
+  if(logoImg.complete && logoImg.naturalWidth){
+    x.fillStyle='#fff'; roundRect(x,pad,H+pad,ls,ls,Math.round(ls*0.12)); x.fill();
+    const m=ls*0.1; x.drawImage(logoImg,pad+m,H+pad+m,ls-2*m,ls-2*m);
+  }
+  // textes
+  const tx=pad+ls+pad, fs=Math.round(band*0.20);
+  x.textBaseline='top'; x.textAlign='left';
+  x.fillStyle='#fff'; x.font=`700 ${fs}px Poppins, sans-serif`;
+  x.fillText('Piscine '+state.model.nom, tx, H+pad);
+  x.fillStyle='#9fc0dc'; x.font=`500 ${Math.round(fs*0.6)}px Inter, sans-serif`;
+  const dim=state.model.longueur?`${state.model.longueur}×${state.model.largeur} m · `:'';
+  x.fillText(`${dim}${state.model.forme} · gamme ${state.model.gamme}`, tx, H+pad+fs*1.3);
+  x.fillText(`Eau ${state.eau.label} · Margelles ${state.marg.label} · Terrasse ${state.ter.label}`, tx, H+pad+fs*2.0);
+  // signature bas
+  x.fillStyle='#e8732a'; x.font=`700 ${Math.round(fs*0.6)}px Poppins, sans-serif`;
+  x.fillText('PISCINE AVENUE', tx, H+band-pad-fs*0.7);
+  x.fillStyle='#7e9bb5'; x.font=`500 ${Math.round(fs*0.5)}px Inter, sans-serif`;
+  x.fillText('Pisciniste · La Roche-sur-Yon — Modèles Génération Piscine', tx, H+band-pad-fs*0.05);
+  return c.toDataURL('image/jpeg',0.92);
+}
+
+async function getFicheFile(){
+  const url=await composeFiche();
+  const blob=await (await fetch(url)).blob();
+  return { url, file:new File([blob],'piscine-avenue-'+(state.model?state.model.id:'projet')+'.jpg',{type:'image/jpeg'}) };
+}
+
+/* télécharger la fiche brandée */
+$('#dl').onclick=async()=>{
+  try{ const {url}=await getFicheFile(); const a=document.createElement('a'); a.href=url; a.download='piscine-avenue-'+(state.model?state.model.id:'rendu')+'.jpg'; a.click(); }
+  catch(e){ const a=document.createElement('a'); a.href=state.result; a.download='piscine-avenue.png'; a.click(); }
 };
+
+/* envoyer au client (partage natif : WhatsApp, SMS, email…) */
+$('#share').onclick=async()=>{
+  try{
+    const {url,file}=await getFicheFile();
+    const txt=`Votre projet piscine ${state.model?state.model.nom:''} — Piscine Avenue, pisciniste à La Roche-sur-Yon.`;
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Votre projet piscine — Piscine Avenue', text:txt});
+    } else {
+      const a=document.createElement('a'); a.href=url; a.download='piscine-avenue.jpg'; a.click();
+      window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+      toast('Image enregistrée — joignez-la dans votre message');
+    }
+  }catch(e){ if(e&&e.name!=='AbortError') toast('Partage indisponible sur cet appareil'); }
+};
+
 $('#newp').onclick=()=>{ location.reload(); };
 
 /* ============ history (localStorage) ============ */
