@@ -107,9 +107,8 @@
   /* RESULT */
   #result{display:none;}
   .cmp{position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow-lg);user-select:none;touch-action:none;background:#000;}
-  .cmp img{display:block;width:100%;pointer-events:none;}
-  .cmp .after{position:absolute;inset:0;overflow:hidden;width:50%;border-right:3px solid #fff;}
-  .cmp .after img{height:100%;width:auto;max-width:none;}
+  .cmp #imgBefore{display:block;width:100%;pointer-events:none;}
+  .cmp #imgAfter{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}
   .cmp .hdl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;
     background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);display:grid;place-items:center;cursor:ew-resize;color:var(--navy);font-weight:700;}
   .cmp .tagb,.cmp .taga{position:absolute;bottom:.7rem;font-size:.66rem;font-weight:700;color:#fff;
@@ -208,7 +207,7 @@
     <div id="result">
       <div class="cmp" id="cmp">
         <img id="imgBefore" alt="Avant">
-        <div class="after"><img id="imgAfter" alt="Après"></div>
+        <img id="imgAfter" alt="Après">
         <div class="tagb">Avant</div><div class="taga">Après</div>
         <div class="hdl" id="hdl">⇆</div>
       </div>
@@ -355,14 +354,13 @@ function refreshGate(){
 function buildPrompt(){
   const m=state.model;
   const dim=m.longueur?` d'environ ${m.longueur} m sur ${m.largeur} m`:'';
-  return `Tu es un expert en photomontage paysager et architecture extérieure. `
-   +`IMAGE 1 = la photographie d'un jardin/terrain. IMAGE 2 = le plan technique vu de dessus du modèle de piscine EXACT à installer : « ${m.nom} » (gamme ${m.gamme}), forme ${m.forme.toLowerCase()}${dim}, de la marque Génération Piscine. `
-   +`Installe dans le jardin (image 1) cette piscine coque creusée en reproduisant FIDÈLEMENT la forme, les proportions et l'emplacement des escaliers/plage indiqués par le plan (image 2). `
-   +`Rends-la comme une VRAIE piscine vue en perspective dans le jardin : ne copie pas le style dessin/plan, n'affiche aucune vue de dessus ni schéma. `
+  return `Tu es un expert en photomontage paysager. Travaille par ÉDITION de la photographie fournie (image 1) : conserve EXACTEMENT son cadrage, son point de vue, son format et tout son décor (maison, clôtures, terrasse, végétation, ciel). N'invente PAS un autre jardin, ne change PAS l'angle de prise de vue. `
+   +`IMAGE 2 = le plan technique vu de dessus du modèle de piscine EXACT à installer : « ${m.nom} » (gamme ${m.gamme}), forme ${m.forme.toLowerCase()}${dim}, de la marque Génération Piscine. `
+   +`Ajoute dans le jardin (image 1) cette piscine coque creusée — en remplaçant une éventuelle piscine déjà présente — en reproduisant FIDÈLEMENT la forme, les proportions et l'emplacement des escaliers/plage indiqués par le plan (image 2). `
+   +`Rends-la comme une VRAIE piscine vue en perspective cohérente avec la photo : ne copie pas le style dessin/plan, n'affiche aucune vue de dessus ni schéma. `
    +`Strictement photoréaliste : respecte la perspective, l'échelle, la profondeur, l'éclairage, les ombres portées et les reflets de la scène d'origine, au niveau du sol. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
-   +`Conserve la maison, la clôture, la végétation et tout l'arrière-plan existants exactement à l'identique ; modifie uniquement la zone d'implantation de la piscine. `
-   +`Le résultat doit ressembler à une vraie photographie haute résolution du jardin une fois la piscine installée. N'ajoute aucun texte ni filigrane.`;
+   +`Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. Résultat haute résolution, sans texte ni filigrane.`;
 }
 
 /* ============ generate ============ */
@@ -410,7 +408,7 @@ function showResult(){
 /* before/after slider */
 function setSlider(pct){
   pct=Math.max(0,Math.min(100,pct));
-  $('.after').style.width=pct+'%';
+  $('#imgAfter').style.clipPath='inset(0 0 0 '+pct+'%)';
   $('#hdl').style.left=pct+'%';
 }
 (function(){
