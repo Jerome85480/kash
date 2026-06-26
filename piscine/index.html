@@ -417,14 +417,23 @@ function refreshGate(){
 }
 
 /* ============ prompt ============ */
+function formeDesc(m){
+  const f=(m.forme||'').toLowerCase();
+  if(f.includes('couloir')) return 'rectangulaire très allongée (couloir de nage)';
+  if(f.includes('ovale')) return 'ovale aux bords arrondis';
+  if(f.includes('carr')) return 'carrée';
+  return 'rectangulaire aux angles légèrement arrondis';
+}
 function buildPrompt(){
   const m=state.model;
-  const dim=m.cote?` de ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
-  return `Tu es un expert en photomontage paysager. Travaille par ÉDITION de la photographie fournie (image 1) : conserve EXACTEMENT son cadrage, son point de vue, son format et tout son décor (maison, clôtures, terrasse, végétation, ciel). N'invente PAS un autre jardin, ne change PAS l'angle de prise de vue. `
-   +`IMAGE 2 = le plan technique vu de dessus du modèle de piscine EXACT à installer : « ${m.nom} » (gamme ${m.gamme}), forme ${m.forme.toLowerCase()}${dim}, de la marque Génération Piscine. `
-   +`Ajoute dans le jardin (image 1) cette piscine coque creusée — en remplaçant une éventuelle piscine déjà présente — en reproduisant FIDÈLEMENT la forme, les proportions et l'emplacement des escaliers/plage indiqués par le plan (image 2). `
-   +`Rends-la comme une VRAIE piscine vue en perspective cohérente avec la photo : ne copie pas le style dessin/plan, n'affiche aucune vue de dessus ni schéma. `
-   +`Strictement photoréaliste : respecte la perspective, l'échelle, la profondeur, l'éclairage, les ombres portées et les reflets de la scène d'origine, au niveau du sol. `
+  const dim=m.cote?` d'environ ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
+  // Instruction d'ÉDITION en tête : la photo (envoyée AVANT le texte par l'API) doit
+  // être conservée à l'identique ; on n'ajoute que la piscine. La forme est décrite en
+  // texte (le plan technique n'est plus envoyé car il faisait régénérer une autre scène).
+  return `ÉDITE cette photographie de jardin : ajoute UNIQUEMENT une piscine, sans rien changer d'autre. `
+   +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle de prise de vue, même format/proportions de l'image, même maison, mêmes clôtures, même végétation, même terrasse et même ciel. N'invente PAS un nouveau jardin, ne recadre pas, ne change pas la perspective. `
+   +`Pose au sol, sur la zone de terrain dégagée au premier plan, une piscine coque creusée de forme ${formeDesc(m)}${dim} (modèle « ${m.nom} » de Génération Piscine). `
+   +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
    +(state.taille.p?(state.taille.p+' '):'')
    +(state.options.length?('La piscine comporte : '+state.options.map(o=>o.p).join(', ')+'. '):'')
@@ -432,8 +441,8 @@ function buildPrompt(){
    +(state.ambiance.p?(state.ambiance.p+' '):'')
    +(state.ambiance.id==='jour'
        ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
-       : `Conserve la composition et les éléments existants (maison, clôtures, cadrage), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
-   +`Résultat haute résolution, sans texte ni filigrane.`;
+       : `Conserve la composition et les éléments existants (maison, clôtures, cadrage, format), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
+   +`Conserve impérativement le format/les proportions de la photo d'origine. Résultat haute résolution, sans texte ni filigrane.`;
 }
 
 /* ============ generate ============ */
@@ -446,7 +455,7 @@ async function generate(){
   try{
     const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt(), modelImageUrl: state.model.image })
+      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
     });
     const rawTxt=await res.text();
     let data;

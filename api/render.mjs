@@ -19,32 +19,22 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { imageBase64, mimeType, prompt, modelImageUrl } = body;
+    const { imageBase64, mimeType, prompt } = body;
 
     if (!imageBase64 || !prompt) {
       res.status(400).json({ error: 'Photo ou description manquante.' });
       return;
     }
 
-    // IMAGE 1 = photo du terrain. IMAGE 2 (optionnelle) = plan du modèle, récupéré
-    // côté serveur (évite les soucis CORS depuis le navigateur).
+    // Édition d'image fidèle (« nano-banana ») : la PHOTO doit venir EN PREMIER, le
+    // texte ensuite. Ainsi Gemini ÉDITE la photo (même cadrage, même format) au lieu
+    // de régénérer une scène. On n'envoie PAS le plan technique du modèle : une 2e
+    // image déclenche un mode « composition » qui invente un nouveau jardin (la forme
+    // est décrite en texte à la place).
     const parts = [
-      { text: prompt },
-      { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
+      { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } },
+      { text: prompt }
     ];
-
-    if (modelImageUrl && /^https:\/\/(www\.)?generationpiscine\.com\//.test(modelImageUrl)) {
-      try {
-        const imgRes = await fetch(modelImageUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0 Safari/537.36' }
-        });
-        if (imgRes.ok) {
-          const buf = Buffer.from(await imgRes.arrayBuffer());
-          const ct = imgRes.headers.get('content-type') || 'image/jpeg';
-          parts.push({ inline_data: { mime_type: ct, data: buf.toString('base64') } });
-        }
-      } catch (_) { /* on continue sans la référence si le fetch échoue */ }
-    }
 
     const payload = {
       contents: [{ role: 'user', parts }],
