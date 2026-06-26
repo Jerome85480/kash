@@ -69,6 +69,15 @@
   .preview .chg{background:rgba(255,255,255,.94);border:none;
     border-radius:100px;padding:.45rem .9rem;font-size:.78rem;font-weight:600;color:var(--navy);cursor:pointer;box-shadow:var(--shadow);}
   .preview .del{color:var(--err);}
+  .model-tag{position:absolute;left:.6rem;bottom:.6rem;right:.6rem;display:none;align-items:center;gap:.55rem;
+    background:rgba(255,255,255,.94);border-radius:13px;padding:.45rem .55rem;box-shadow:0 6px 18px rgba(11,42,74,.22);}
+  .model-tag.on{display:flex;}
+  .model-tag img{width:54px;height:54px;flex:0 0 auto;border-radius:9px;object-fit:contain;background:#fff;border:1px solid #e6eef6;max-height:54px;}
+  .model-tag .mt-txt{display:flex;flex-direction:column;line-height:1.25;min-width:0;}
+  .model-tag .mt-txt b{color:var(--navy);font-size:.9rem;}
+  .model-tag .mt-txt span{color:var(--muted);font-size:.74rem;}
+  .model-tag .mt-hint{margin-left:auto;flex:0 0 auto;max-width:38%;text-align:right;font-size:.66rem;
+    font-weight:600;color:var(--orange);line-height:1.2;}
 
   /* MODELS */
   .tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.6rem;margin-bottom:.4rem;-webkit-overflow-scrolling:touch;}
@@ -191,6 +200,11 @@
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
       <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg del" id="del">Supprimer</button></div>
+      <div class="model-tag" id="modelTag">
+        <img id="modelTagImg" alt="">
+        <div class="mt-txt"><b id="modelTagName"></b><span id="modelTagDim"></span></div>
+        <div class="mt-hint">Aperçu — cliquez « Créer mon rendu » pour la version photo</div>
+      </div>
     </div>
   </section>
 
@@ -319,6 +333,7 @@ $('#chg').onclick=()=>file.click();
 $('#del').onclick=()=>{
   state.photo=null; file.value=''; fileCam.value='';
   $('#preview').style.display='none'; drop.style.display='block';
+  $('#modelTag').classList.remove('on');
   $('#s1').classList.remove('ok');
   refreshGate();
   $('#s1').scrollIntoView({behavior:'smooth',block:'start'});
@@ -348,6 +363,7 @@ function handleFile(f){
       $('#s1').classList.add('ok');
       $('#s2').classList.remove('lock');
       refreshGate();
+      if(state.model) showModelTag();  // si un modèle était déjà choisi, on l'affiche sur la photo
       $('#s2').scrollIntoView({behavior:'smooth',block:'start'});
     };
     img.src=r.result;
@@ -380,6 +396,7 @@ function renderModels(){
   $('#grid').querySelectorAll('.mcard').forEach(c=>c.onclick=()=>{
     state.model=MODELS.find(m=>m.id===c.dataset.id);
     renderModels(); $('#s2').classList.add('ok'); $('#s3').classList.remove('lock'); refreshGate();
+    showModelTag();
     toast('Modèle : '+state.model.nom);
   });
 }
@@ -404,6 +421,23 @@ function buildChipsMulti(host,arr,key){
 }
 buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
 buildChipsMulti('#optOptions',OPTIONS,'options'); buildChips('#optAmbiance',AMBIANCE,'ambiance'); buildChipsMulti('#optAmenag',AMENAG,'amenag');
+
+/* ============ aperçu du modèle sur la photo ============ */
+function showModelTag(){
+  const t=$('#modelTag');
+  if(!state.model){ t.classList.remove('on'); return; }
+  if(!state.photo){
+    // pas encore de photo : on invite à en importer une pour voir l'aperçu
+    t.classList.remove('on');
+    toast('Importez une photo du terrain pour voir la piscine dessus.');
+    return;
+  }
+  $('#modelTagImg').src=state.model.image;
+  $('#modelTagName').textContent=state.model.nom;
+  $('#modelTagDim').textContent=(state.model.cote||state.model.forme||'');
+  t.classList.add('on');
+  $('#preview').scrollIntoView({behavior:'smooth',block:'center'});
+}
 
 /* ============ gate / summary ============ */
 function refreshGate(){
