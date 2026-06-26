@@ -359,7 +359,7 @@ function renderModels(){
   const q=$('#search').value.trim().toLowerCase();
   const list=MODELS.filter(m=>(curGamme==='Tous'||m.gamme===curGamme)&&(!q||m.nom.toLowerCase().includes(q)||m.gamme.toLowerCase().includes(q)));
   $('#grid').innerHTML=list.map(m=>{
-    const dim=m.longueur?`${m.longueur}×${m.largeur} m · `:'';
+    const dim=m.cote?`${m.cote} · `:'';
     return `<div class="mcard${state.model&&state.model.id===m.id?' on':''}" data-id="${m.id}">
       <div class="imw"><img loading="lazy" src="${m.image}" alt="${m.nom}" onerror="this.style.display='none'"></div>
       <div class="mi"><div class="mn">${m.nom}</div><div class="md">${dim}${m.forme}</div></div></div>`;
@@ -406,7 +406,7 @@ function refreshGate(){
 /* ============ prompt ============ */
 function buildPrompt(){
   const m=state.model;
-  const dim=m.longueur?` d'environ ${m.longueur} m sur ${m.largeur} m`:'';
+  const dim=m.cote?` de ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
   return `Tu es un expert en photomontage paysager. Travaille par ÉDITION de la photographie fournie (image 1) : conserve EXACTEMENT son cadrage, son point de vue, son format et tout son décor (maison, clôtures, terrasse, végétation, ciel). N'invente PAS un autre jardin, ne change PAS l'angle de prise de vue. `
    +`IMAGE 2 = le plan technique vu de dessus du modèle de piscine EXACT à installer : « ${m.nom} » (gamme ${m.gamme}), forme ${m.forme.toLowerCase()}${dim}, de la marque Génération Piscine. `
    +`Ajoute dans le jardin (image 1) cette piscine coque creusée — en remplaçant une éventuelle piscine déjà présente — en reproduisant FIDÈLEMENT la forme, les proportions et l'emplacement des escaliers/plage indiqués par le plan (image 2). `
@@ -512,7 +512,7 @@ async function composeFiche(){
   x.fillStyle='#fff'; x.font=`700 ${fs}px Poppins, sans-serif`;
   x.fillText('Piscine '+state.model.nom, tx, H+pad);
   x.fillStyle='#9fc0dc'; x.font=`500 ${Math.round(fs*0.6)}px Inter, sans-serif`;
-  const dim=state.model.longueur?`${state.model.longueur}×${state.model.largeur} m · `:'';
+  const dim=state.model.cote?`${state.model.cote}${state.model.profondeur?(' · prof '+state.model.profondeur):''} · `:'';
   x.fillText(`${dim}${state.model.forme} · gamme ${state.model.gamme}`, tx, H+pad+fs*1.3);
   x.fillText(`Eau ${state.eau.label} · Margelles ${state.marg.label} · Terrasse ${state.ter.label}`, tx, H+pad+fs*2.0);
   // signature bas
