@@ -331,7 +331,7 @@ $('#btnCam').onclick=()=>fileCam.click();
 $('#btnFile').onclick=()=>file.click();
 $('#chg').onclick=()=>file.click();
 $('#del').onclick=()=>{
-  state.photo=null; file.value=''; fileCam.value='';
+  state.photo=null; state.composite=null; file.value=''; fileCam.value='';
   $('#preview').style.display='none'; drop.style.display='block';
   $('#modelTag').classList.remove('on');
   $('#s1').classList.remove('ok');
@@ -358,6 +358,7 @@ function handleFile(f){
       c.getContext('2d').drawImage(img,0,0,w,h);
       state.photo=c.toDataURL('image/jpeg',0.92);
       state.photoMime='image/jpeg';
+      state.composite=null;  // invalidé : sera recalculé après sélection du modèle
       $('#previmg').src=state.photo;
       $('#preview').style.display='block'; drop.style.display='none';
       $('#s1').classList.add('ok');
@@ -422,12 +423,11 @@ function buildChipsMulti(host,arr,key){
 buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
 buildChipsMulti('#optOptions',OPTIONS,'options'); buildChips('#optAmbiance',AMBIANCE,'ambiance'); buildChipsMulti('#optAmenag',AMENAG,'amenag');
 
-/* ============ aperçu du modèle sur la photo ============ */
+/* ============ aperçu du modèle + composite pour le rendu ============ */
 function showModelTag(){
   const t=$('#modelTag');
   if(!state.model){ t.classList.remove('on'); return; }
   if(!state.photo){
-    // pas encore de photo : on invite à en importer une pour voir l'aperçu
     t.classList.remove('on');
     toast('Importez une photo du terrain pour voir la piscine dessus.');
     return;
@@ -437,6 +437,46 @@ function showModelTag(){
   $('#modelTagDim').textContent=(state.model.cote||state.model.forme||'');
   t.classList.add('on');
   $('#preview').scrollIntoView({behavior:'smooth',block:'center'});
+  // Lance la préparation du composite en arrière-plan (plan incrusté dans la photo)
+  buildComposite();
+}
+
+// Crée une version composite de la photo avec le plan du modèle incrusté dans le coin.
+// Stockée dans state.composite — utilisée à la place de state.photo au moment du rendu.
+function buildComposite(){
+  state.composite=null;
+  if(!state.model||!state.model.image||!state.photo) return;
+  const planUrl='/api/plan?url='+encodeURIComponent(state.model.image);
+  const planImg=new Image(); planImg.crossOrigin='anonymous';
+  planImg.onload=()=>{
+    try{
+      const terrain=new Image(); terrain.crossOrigin='anonymous';
+      terrain.onload=()=>{
+        const W=terrain.naturalWidth, H=terrain.naturalHeight;
+        const c=document.createElement('canvas'); c.width=W; c.height=H;
+        const x=c.getContext('2d');
+        x.drawImage(terrain,0,0,W,H);
+        // vignette plan : ~23% de la largeur, coin bas-droit
+        const vw=Math.round(W*0.23);
+        const vh=Math.round(planImg.naturalHeight*vw/planImg.naturalWidth);
+        const mx=8,my=8;
+        // ombre légère + cadre blanc
+        x.shadowColor='rgba(0,0,0,0.4)'; x.shadowBlur=8;
+        x.fillStyle='#fff'; x.fillRect(W-vw-mx-4,H-vh-my-22,vw+8,vh+26);
+        x.shadowColor='transparent'; x.shadowBlur=0;
+        x.drawImage(planImg,W-vw-mx,H-vh-my,vw,vh);
+        // étiquette
+        x.fillStyle='rgba(11,42,74,0.82)'; x.fillRect(W-vw-mx,H-vh-my-20,vw,20);
+        x.fillStyle='#fff'; x.font='bold '+(Math.round(W*0.012))+'px sans-serif';
+        x.fillText('Forme de référence',W-vw-mx+4,H-vh-my-6);
+        state.composite=c.toDataURL('image/jpeg',0.92);
+      };
+      terrain.onerror=()=>{};
+      terrain.src=state.photo;
+    }catch(_){}
+  };
+  planImg.onerror=()=>{ state.composite=null; };
+  planImg.src=planUrl;
 }
 
 /* ============ gate / summary ============ */
@@ -461,11 +501,13 @@ function formeDesc(m){
 function buildPrompt(){
   const m=state.model;
   const dim=m.cote?` d'environ ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
-  // Instruction d'ÉDITION en tête : la photo (envoyée AVANT le texte par l'API) doit
-  // être conservée à l'identique ; on n'ajoute que la piscine. La forme est décrite en
-  // texte (le plan technique n'est plus envoyé car il faisait régénérer une autre scène).
+  const withPlan=!!state.composite;
+  const planNote=withPlan
+    ? `Cette photo contient dans le coin bas-droit une petite vignette intitulée 'Forme de référence' — c'est le plan technique vu de dessus du modèle exact à installer. Utilise-la UNIQUEMENT pour reproduire fidèlement la forme et les proportions de la piscine. Cette vignette doit disparaître dans l'image finale. `
+    : '';
   return `ÉDITE cette photographie de jardin : ajoute UNIQUEMENT une piscine, sans rien changer d'autre. `
    +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle de prise de vue, même format/proportions de l'image, même maison, mêmes clôtures, même végétation, même terrasse et même ciel. N'invente PAS un nouveau jardin, ne recadre pas, ne change pas la perspective. `
+   +planNote
    +`Pose au sol, sur la zone de terrain dégagée au premier plan, une piscine coque creusée de forme ${formeDesc(m)}${dim} (modèle « ${m.nom} » de Génération Piscine). `
    +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
    +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
@@ -489,7 +531,7 @@ async function generate(){
   try{
     const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ imageBase64: state.photo.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
+      body:JSON.stringify({ imageBase64: (state.composite||state.photo).split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
     });
     const rawTxt=await res.text();
     let data;
