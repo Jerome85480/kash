@@ -290,12 +290,12 @@ const EAU = [
   {id:'sable', label:'Sable', sw:'#d8c6a0', p:'coque couleur sable, eau vert d\'eau lagon translucide'}
 ];
 const MARG = [
-  {id:'blanc', label:'Blanc', sw:'#f3f1ec', p:'margelles blanches'},
-  {id:'gris-clair', label:'Gris clair', sw:'#cfd4d6', p:'margelles gris clair'},
-  {id:'anthracite', label:'Anthracite', sw:'#48505a', p:'margelles gris anthracite'},
-  {id:'beige', label:'Beige / sable', sw:'#d9c7a3', p:'margelles beige sable'},
-  {id:'pierre', label:'Pierre naturelle', sw:'#c9bfa8', p:'margelles en pierre naturelle reconstituée'},
-  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'margelles en travertin clair'}
+  {id:'blanc', label:'Blanc', sw:'#f3f1ec', p:'un rebord de margelles carrelées blanches d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'gris-clair', label:'Gris clair', sw:'#cfd4d6', p:'un rebord de margelles gris clair d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'anthracite', label:'Anthracite', sw:'#48505a', p:'un rebord de margelles gris anthracite d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'beige', label:'Beige / sable', sw:'#d9c7a3', p:'un rebord de margelles beige sable d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'pierre', label:'Pierre naturelle', sw:'#c9bfa8', p:'un rebord de margelles en pierre naturelle reconstituée d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'un rebord de margelles en travertin clair d\'environ 35 cm de large ceinturant entièrement le bassin'}
 ];
 const TER = [
   {id:'bois', label:'Bois exotique', sw:'#a9743f', p:'terrasse en lames de bois exotique'},
@@ -470,16 +470,18 @@ function buildComposite(){
           const c=document.createElement('canvas'); c.width=W; c.height=H;
           const x=c.getContext('2d');
           x.drawImage(terrain,0,0,W,H);
-          const vw=Math.round(W*0.23);
+          const vw=Math.round(W*0.32);
           const vh=Math.round(planImg.naturalHeight*vw/planImg.naturalWidth);
-          const mx=8,my=8;
-          x.shadowColor='rgba(0,0,0,0.4)'; x.shadowBlur=8;
-          x.fillStyle='#fff'; x.fillRect(W-vw-mx-4,H-vh-my-22,vw+8,vh+26);
+          const mx=10,my=10;
+          const lh=Math.round(W*0.022);
+          x.shadowColor='rgba(0,0,0,0.5)'; x.shadowBlur=12;
+          x.fillStyle='#fff'; x.fillRect(W-vw-mx-5,H-vh-my-lh-5,vw+10,vh+lh+10);
           x.shadowColor='transparent'; x.shadowBlur=0;
           x.drawImage(planImg,W-vw-mx,H-vh-my,vw,vh);
-          x.fillStyle='rgba(11,42,74,0.82)'; x.fillRect(W-vw-mx,H-vh-my-20,vw,20);
-          x.fillStyle='#fff'; x.font='bold '+(Math.round(W*0.012))+'px sans-serif';
-          x.fillText('Forme de référence',W-vw-mx+4,H-vh-my-6);
+          x.fillStyle='rgba(11,42,74,0.92)'; x.fillRect(W-vw-mx,H-vh-my-lh,vw,lh);
+          x.fillStyle='#fff'; x.font='bold '+(Math.round(W*0.013))+'px sans-serif'; x.textBaseline='middle';
+          x.fillText('FORME DE RÉFÉRENCE — reproduire exactement',W-vw-mx+6,H-vh-my-lh/2);
+          x.textBaseline='alphabetic';
           state.composite=c.toDataURL('image/jpeg',0.92);
           resolve(state.composite);
         };
@@ -516,15 +518,17 @@ function buildPrompt(){
   const dim=m.cote?` d'environ ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
   const withPlan=!!state.composite;
   const planNote=withPlan
-    ? `Cette photo contient dans le coin bas-droit une petite vignette intitulée 'Forme de référence' — c'est le plan technique vu de dessus du modèle exact à installer. Utilise-la UNIQUEMENT pour reproduire fidèlement la forme et les proportions de la piscine. Cette vignette doit disparaître dans l'image finale. `
+    ? `Dans le coin bas-droit de cette photo se trouve une vignette titrée "FORME DE RÉFÉRENCE — reproduire exactement". C'est le plan technique vu de dessus de la piscine à installer. OBLIGATION ABSOLUE : reproduis cette forme précise dans le rendu — pas une piscine rectangulaire générique, mais la forme exacte du plan (angles, arrondis, rapport longueur/largeur). La vignette de référence doit disparaître dans l'image finale. `
     : '';
-  return `ÉDITE cette photographie : ajoute UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
+  return `ÉDITE cette photographie : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
    +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas. `
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
    +planNote
-   +`Creuse dans le sol au premier plan une piscine coque de forme ${formeDesc(m)}${dim} (modèle « ${m.nom} » de Génération Piscine). `
+   +`Creuse dans le sol une piscine coque ${dim?`de ${m.longueurStr} m × ${m.largeurStr} m `:''}`
+   +`(modèle « ${m.nom} » de Génération Piscine, gamme ${m.gamme}). `
+   +`FORME : ${m.forme||formeDesc(m)}. ${withPlan?'Respecte impérativement la forme exacte visible dans la vignette de référence.':''} `
    +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
-   +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
+   +`FINITIONS OBLIGATOIRES : ${state.eau.p}. Pose ${state.marg.p} — ce rebord de margelles doit être clairement visible tout autour du bassin dans le rendu. ${state.ter.p} autour des margelles. `
    +(state.taille.p?(state.taille.p+' '):'')
    +(state.options.length?('La piscine comporte : '+state.options.map(o=>o.p).join(', ')+'. '):'')
    +(state.amenag.length?('Ajoute autour de la piscine : '+state.amenag.map(o=>o.p).join(', ')+'. '):'')
