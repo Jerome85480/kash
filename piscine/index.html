@@ -506,12 +506,38 @@ function refreshGate(){
 }
 
 /* ============ prompt ============ */
+// Construit une description textuelle précise de la forme du bassin propre à CE modèle :
+// catégorie de forme, proportions exactes (ratio L/l), type de fond, entrée plage, couloir de nage.
+// Objectif : que l'IA reproduise la silhouette du modèle choisi et pas une piscine générique.
 function formeDesc(m){
   const f=(m.forme||'').toLowerCase();
-  if(f.includes('couloir')) return 'rectangulaire très allongée (couloir de nage)';
-  if(f.includes('ovale')) return 'ovale aux bords arrondis';
-  if(f.includes('carr')) return 'carrée';
-  return 'rectangulaire aux angles légèrement arrondis';
+  const g=(m.gamme||'').toLowerCase();
+  const L=+m.longueur||0, l=+m.largeur||0;
+  const ratio = (L&&l)? L/l : 0;       // proportions réelles = source de vérité
+  let base, prop='';
+  if(f.includes('couloir')||ratio>=2.6){
+    base=`un couloir de nage rectangulaire étroit et très allongé, aux angles vifs`;
+    if(ratio) prop=`environ ${Math.round(ratio*10)/10} fois plus long que large`;
+  } else if(f.includes('ovale')){
+    base=`un bassin de forme ovale arrondie, sans angle, aux deux extrémités demi-circulaires`;
+    if(ratio>=1.7) prop=`nettement allongé`;
+  } else if(ratio ? ratio<1.2 : f.includes('carr')){
+    base=`un bassin de forme carrée, longueur et largeur quasiment égales, aux angles légèrement arrondis`;
+  } else {
+    base=`un bassin rectangulaire aux quatre angles légèrement arrondis`;
+    if(ratio>=2.1) prop=`nettement allongé (plus de 2 fois plus long que large)`;
+    else if(ratio>=1.7) prop=`allongé (environ 2 fois plus long que large)`;
+    else if(ratio>=1.35) prop=`aux proportions classiques (environ 1,5 fois plus long que large)`;
+    else if(ratio) prop=`presque carré (à peine plus long que large)`;
+  }
+  const plageNote = /plage/.test(g)
+    ? `. Ce modèle intègre une large PLAGE IMMERGÉE : une grande marche d'eau peu profonde occupant toute la largeur à l'une des extrémités (zone d'eau plus claire)`
+    : '';
+  let fond='';
+  if(f.includes('progressif')) fond=`. Fond à profondeur progressive (zone peu profonde plus claire d'un côté, plus profonde et plus foncée de l'autre)`;
+  else if(f.includes('incliné')) fond=`. Fond incliné régulier (léger dégradé de profondeur visible dans la teinte de l'eau)`;
+  else if(f.includes('fond plat')) fond=`. Fond plat, profondeur homogène (teinte d'eau uniforme)`;
+  return `${base}${prop?', '+prop:''}${plageNote}${fond}`;
 }
 function buildPrompt(){
   const m=state.model;
@@ -524,9 +550,9 @@ function buildPrompt(){
    +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas. `
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
    +planNote
-   +`Creuse dans le sol une piscine coque ${dim?`de ${m.longueurStr} m × ${m.largeurStr} m `:''}`
-   +`(modèle « ${m.nom} » de Génération Piscine, gamme ${m.gamme}). `
-   +`FORME : ${m.forme||formeDesc(m)}. ${withPlan?'Respecte impérativement la forme exacte visible dans la vignette de référence.':''} `
+   +`Creuse dans le sol ${formeDesc(m)}. `
+   +`Il s'agit du modèle exact « ${m.nom} » de Génération Piscine (gamme ${m.gamme})${dim?`, dimensions ${m.longueurStr} m × ${m.largeurStr} m`:''}. `
+   +`Respecte SCRUPULEUSEMENT cette forme et ces proportions — ne dessine pas une piscine rectangulaire générique différente du modèle décrit. ${withPlan?'Le plan vu de dessus dans la vignette de référence confirme la forme exacte.':''} `
    +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
    +`FINITIONS OBLIGATOIRES : ${state.eau.p}. Pose ${state.marg.p} — ce rebord de margelles doit être clairement visible tout autour du bassin dans le rendu. ${state.ter.p} autour des margelles. `
    +(state.taille.p?(state.taille.p+' '):'')
