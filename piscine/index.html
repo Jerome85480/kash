@@ -919,6 +919,11 @@ function renderHistory(){
   });
 }
 renderHistory();
+
+/* ============ PWA : enregistre le service worker (rend l'app installable avec son logo) ============ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>
