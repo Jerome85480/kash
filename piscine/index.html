@@ -117,6 +117,10 @@
   .chip:hover{border-color:var(--teal);}
   .chip.on{border-color:var(--navy);background:#f0f7fd;}
   .sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+  .echelle{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.84rem;color:var(--ink);}
+  .echelle input{width:90px;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;font-family:inherit;font-size:.9rem;outline:none;background:#fbfdff;}
+  .echelle input:focus{border-color:var(--teal);background:#fff;}
+  .echelle b{color:var(--navy);}
 
   /* CTA */
   .cta{width:100%;margin-top:.4rem;background:linear-gradient(135deg,var(--orange),var(--orange-light));
@@ -237,6 +241,11 @@
     <div class="opt-group"><label>Options de la piscine <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optOptions"></div></div>
     <div class="opt-group"><label>Ambiance / moment</label><div class="chips" id="optAmbiance"></div></div>
     <div class="opt-group"><label>Aménagements autour <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optAmenag"></div></div>
+    <div class="opt-group"><label>Échelle réelle <span style="font-weight:500;color:var(--muted)">(optionnel — pour la bonne taille)</span></label>
+      <div class="echelle"><span>Largeur dégagée au sol à l'emplacement de la piscine :</span>
+        <input type="number" id="echelleInput" min="2" max="40" step="0.5" inputmode="decimal" placeholder="ex. 8"> <b>m</b></div>
+      <p class="hint" style="margin:.4rem 0 0">Indiquez la largeur réelle du terrain dégagé : la piscine sera dimensionnée à la bonne échelle.</p>
+    </div>
   </section>
 
   <!-- STEP 4 — GENERATE -->
@@ -331,7 +340,7 @@ const AMENAG = [
   {id:'douche', label:'Douche ext.', sw:'#9aa7b0', p:'une douche extérieure design'}
 ];
 
-const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null, zone:{active:false,l:0.12,t:0.18,r:0.88,b:0.82} };
+const state = { photo:null, photoMime:'image/jpeg', model:null, modelImg:null, modelImgP:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null, zone:{active:false,l:0.12,t:0.18,r:0.88,b:0.82}, echelleM:0 };
 
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
@@ -434,6 +443,7 @@ function buildChipsMulti(host,arr,key){
 }
 buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
 buildChipsMulti('#optOptions',OPTIONS,'options'); buildChips('#optAmbiance',AMBIANCE,'ambiance'); buildChipsMulti('#optAmenag',AMENAG,'amenag');
+$('#echelleInput').oninput=e=>{ const v=parseFloat(e.target.value); state.echelleM=(isFinite(v)&&v>0)?v:0; };
 
 /* ============ aperçu du modèle + composite pour le rendu ============ */
 function showModelTag(){
@@ -453,44 +463,44 @@ function showModelTag(){
   buildComposite();
 }
 
-// Crée une version composite de la photo avec le plan du modèle incrusté dans le coin.
-// Renvoie une Promise résolue avec le dataURL composite (ou null en cas d'échec).
-// Stocke aussi state.composite et garde la promesse dans state.compositeP pour que
-// generate() puisse l'awaiter même si le plan n'est pas encore chargé.
+// Récupère la VRAIE PHOTO du modèle sélectionné (via le proxy CORS /api/plan) et la
+// convertit en base64. Elle sera envoyée comme 2e image à Gemini : il reproduit ainsi
+// fidèlement la forme/les marches/la teinte d'eau du modèle réel. La promesse est gardée
+// dans state.modelImgP pour que generate() puisse l'attendre.
 function buildComposite(){
-  state.composite=null;
-  if(!state.model||!state.model.image||!state.photo){ state.compositeP=null; return; }
-  state.compositeP=new Promise(resolve=>{
-    const planImg=new Image(); planImg.crossOrigin='anonymous';
-    planImg.onload=()=>{
-      try{
-        const terrain=new Image();
-        terrain.onload=()=>{
-          const W=terrain.naturalWidth, H=terrain.naturalHeight;
-          const c=document.createElement('canvas'); c.width=W; c.height=H;
-          const x=c.getContext('2d');
-          x.drawImage(terrain,0,0,W,H);
-          const vw=Math.round(W*0.32);
-          const vh=Math.round(planImg.naturalHeight*vw/planImg.naturalWidth);
-          const mx=10,my=10;
-          const lh=Math.round(W*0.022);
-          x.shadowColor='rgba(0,0,0,0.5)'; x.shadowBlur=12;
-          x.fillStyle='#fff'; x.fillRect(W-vw-mx-5,H-vh-my-lh-5,vw+10,vh+lh+10);
-          x.shadowColor='transparent'; x.shadowBlur=0;
-          x.drawImage(planImg,W-vw-mx,H-vh-my,vw,vh);
-          x.fillStyle='rgba(11,42,74,0.92)'; x.fillRect(W-vw-mx,H-vh-my-lh,vw,lh);
-          x.fillStyle='#fff'; x.font='bold '+(Math.round(W*0.013))+'px sans-serif'; x.textBaseline='middle';
-          x.fillText('FORME DE RÉFÉRENCE — reproduire exactement',W-vw-mx+6,H-vh-my-lh/2);
-          x.textBaseline='alphabetic';
-          state.composite=c.toDataURL('image/jpeg',0.92);
-          resolve(state.composite);
-        };
-        terrain.onerror=()=>resolve(null);
-        terrain.src=state.photo;
-      }catch(_){ resolve(null); }
-    };
-    planImg.onerror=()=>{ state.composite=null; resolve(null); };
-    planImg.src='/api/plan?url='+encodeURIComponent(state.model.image);
+  state.modelImg=null;
+  if(!state.model||!state.model.image){ state.modelImgP=null; return; }
+  const url='/api/plan?url='+encodeURIComponent(state.model.image);
+  state.modelImgP=fetch(url,{cache:'force-cache'})
+    .then(r=>r.ok?r.blob():Promise.reject())
+    .then(blob=>new Promise((resolve)=>{
+      const fr=new FileReader();
+      fr.onload=()=>{
+        const dataUrl=fr.result;
+        const comma=dataUrl.indexOf(',');
+        state.modelImg={ base64:dataUrl.slice(comma+1), mime:(blob.type||'image/jpeg') };
+        resolve(state.modelImg);
+      };
+      fr.onerror=()=>resolve(null);
+      fr.readAsDataURL(blob);
+    }))
+    .catch(()=>{ state.modelImg=null; return null; });
+}
+
+// Choisit le format de sortie Gemini le plus proche des proportions de la photo terrain.
+function pickAspect(w,h){
+  if(!w||!h) return '4:3';
+  const r=w/h;
+  const opts={'1:1':1,'2:3':2/3,'3:2':3/2,'3:4':3/4,'4:3':4/3,'4:5':4/5,'5:4':5/4,'9:16':9/16,'16:9':16/9,'21:9':21/9};
+  let best='4:3',bd=1e9;
+  for(const k in opts){ const d=Math.abs(opts[k]-r); if(d<bd){bd=d;best=k;} }
+  return best;
+}
+// Dimensions naturelles de la photo terrain (pour le format de sortie).
+function terrainDims(){
+  return new Promise(resolve=>{
+    if(!state.photo) return resolve({w:0,h:0});
+    const i=new Image(); i.onload=()=>resolve({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>resolve({w:0,h:0}); i.src=state.photo;
   });
 }
 
@@ -541,19 +551,26 @@ function formeDesc(m){
 }
 function buildPrompt(){
   const m=state.model;
-  const dim=m.cote?` d'environ ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
-  const withPlan=!!state.composite;
-  const planNote=withPlan
-    ? `Dans le coin bas-droit de cette photo se trouve une vignette titrée "FORME DE RÉFÉRENCE — reproduire exactement". C'est le plan technique vu de dessus de la piscine à installer. OBLIGATION ABSOLUE : reproduis cette forme précise dans le rendu — pas une piscine rectangulaire générique, mais la forme exacte du plan (angles, arrondis, rapport longueur/largeur). La vignette de référence doit disparaître dans l'image finale. `
+  const dim=m.cote?`, dimensions réelles ${m.longueurStr} m × ${m.largeurStr} m${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
+  const withModel=!!state.modelImg;   // 2e image = vraie photo du modèle
+  const modelNote=withModel
+    ? `L'IMAGE 2 est une VRAIE PHOTO du modèle de piscine exact à installer : reproduis fidèlement sa forme, ses marches/escaliers, la teinte de son eau et ses margelles, en l'intégrant en perspective dans le jardin de l'image 1. `
     : '';
-  return `ÉDITE cette photographie : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
-   +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas. `
+  // Échelle réelle : si l'utilisateur a indiqué une largeur réelle au sol, on aide
+  // l'IA à dimensionner la piscine correctement par rapport à la scène.
+  let echelleNote='';
+  if(state.echelleM>0 && m.longueur){
+    const pct=Math.round(Math.min(98, (m.longueur/state.echelleM)*100));
+    echelleNote=`ÉCHELLE : à l'emplacement de la piscine, la largeur dégagée au sol mesure environ ${state.echelleM} m en réalité ; la piscine (${m.longueurStr} m de long) doit donc occuper environ ${pct}% de cette largeur. Respecte cette échelle réaliste, ni trop grande ni trop petite. `;
+  }
+  return `${withModel?'IMAGE 1 = ':''}photographie du jardin d'un client. ÉDITE-la : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
+   +`RÈGLE ABSOLUE : conserve l'image du jardin EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas, ne passe pas en portrait. `
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
-   +planNote
-   +`Creuse dans le sol ${formeDesc(m)}. `
-   +`Il s'agit du modèle exact « ${m.nom} » de Génération Piscine (gamme ${m.gamme})${dim?`, dimensions ${m.longueurStr} m × ${m.largeurStr} m`:''}. `
-   +`Respecte SCRUPULEUSEMENT cette forme et ces proportions — ne dessine pas une piscine rectangulaire générique différente du modèle décrit. ${withPlan?'Le plan vu de dessus dans la vignette de référence confirme la forme exacte.':''} `
-   +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
+   +modelNote
+   +`Il s'agit du modèle exact « ${m.nom} » de Génération Piscine (gamme ${m.gamme})${dim} : ${formeDesc(m)}. `
+   +`Respecte SCRUPULEUSEMENT cette forme et ces proportions — ne dessine pas une piscine rectangulaire générique différente du modèle. `
+   +echelleNote
+   +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo du jardin. Aucune vue de dessus, aucun plan, aucun schéma. `
    +`FINITIONS OBLIGATOIRES : ${state.eau.p}. Pose ${state.marg.p} — ce rebord de margelles doit être clairement visible tout autour du bassin dans le rendu. ${state.ter.p} autour des margelles. `
    +(state.taille.p?(state.taille.p+' '):'')
    +(state.options.length?('La piscine comporte : '+state.options.map(o=>o.p).join(', ')+'. '):'')
@@ -565,7 +582,7 @@ function buildPrompt(){
    +(state.zone&&state.zone.active
        ? `IMPÉRATIF : la piscine DOIT être creusée EXACTEMENT dans la zone délimitée par le cadre orange libellé "Zone implantation" visible dans la photo. Ne place pas la piscine en dehors de cette zone. `
        : '')
-   +`Conserve impérativement le format/les proportions de la photo d'origine. Résultat haute résolution, sans texte ni filigrane.`;
+   +`FORMAT DE SORTIE : strictement identique à la photo du jardin (même orientation paysage/portrait, même proportions). Résultat haute résolution, sans texte ni filigrane.`;
 }
 
 /* ============ generate ============ */
@@ -575,16 +592,23 @@ async function generate(){
   $('#loader').classList.add('on');
   $('#gen').disabled=true;
   $('#s4').scrollIntoView({behavior:'smooth',block:'center'});
-  // Attend que le composite soit prêt (max 8s) avant d'envoyer.
-  // Sans cette attente, si l'utilisateur clique vite après avoir choisi le modèle,
-  // state.composite est encore null et Gemini génère une piscine générique.
-  if(state.compositeP) await Promise.race([state.compositeP, new Promise(r=>setTimeout(r,8000))]).catch(()=>{});
-  let imgToSend=state.composite||state.photo;
+  // Attend que la vraie photo du modèle soit chargée (max 8s) avant d'envoyer.
+  if(state.modelImgP) await Promise.race([state.modelImgP, new Promise(r=>setTimeout(r,8000))]).catch(()=>{});
+  // Image du terrain (avec la zone dessinée dessus si activée).
+  let imgToSend=state.photo;
   if(state.zone&&state.zone.active) imgToSend=await applyZoneToImage(imgToSend).catch(()=>imgToSend);
+  const dims=await terrainDims();
+  const payload={
+    imageBase64: imgToSend.split(',')[1],
+    mimeType: state.photoMime,
+    prompt: buildPrompt(),
+    aspectRatio: pickAspect(dims.w,dims.h)
+  };
+  if(state.modelImg){ payload.modelImageBase64=state.modelImg.base64; payload.modelMimeType=state.modelImg.mime; }
   try{
     const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ imageBase64: imgToSend.split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
+      body:JSON.stringify(payload)
     });
     const rawTxt=await res.text();
     let data;
