@@ -1,6 +1,7 @@
 // Vercel serverless function (racine) — proxy vers Google Gemini 2.5 Flash Image (« nano-banana »).
 // Sert l'app piscine (/piscine). La clé reste côté serveur (env GEMINI_API_KEY) — JAMAIS dans le code.
-// Reçoit { imageBase64, mimeType, prompt } et renvoie { imageBase64, mimeType }.
+// Reçoit { imageBase64, mimeType, prompt, modelImageBase64?, modelMimeType?, aspectRatio? }
+// et renvoie { imageBase64, mimeType }.
 
 const MODEL = 'gemini-2.5-flash-image';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
@@ -19,26 +20,35 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { imageBase64, mimeType, prompt } = body;
+    const { imageBase64, mimeType, prompt, modelImageBase64, modelMimeType, aspectRatio } = body;
 
     if (!imageBase64 || !prompt) {
       res.status(400).json({ error: 'Photo ou description manquante.' });
       return;
     }
 
-    // Édition d'image fidèle (« nano-banana ») : la PHOTO doit venir EN PREMIER, le
-    // texte ensuite. Ainsi Gemini ÉDITE la photo (même cadrage, même format) au lieu
-    // de régénérer une scène. On n'envoie PAS le plan technique du modèle : une 2e
-    // image déclenche un mode « composition » qui invente un nouveau jardin (la forme
-    // est décrite en texte à la place).
+    // Édition d'image fidèle (« nano-banana ») : la PHOTO du terrain vient EN PREMIER.
+    // On joint en 2e image la VRAIE PHOTO du modèle de piscine à reproduire : Gemini
+    // copie ainsi fidèlement la forme/les marches/la teinte d'eau du modèle réel.
+    // Pour éviter qu'il recadre la sortie au format de la photo modèle (souvent
+    // portrait), on impose le format de sortie via imageConfig.aspectRatio (= format
+    // de la photo du terrain). Le texte vient en dernier.
     const parts = [
-      { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } },
-      { text: prompt }
+      { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
     ];
+    if (modelImageBase64) {
+      parts.push({ inline_data: { mime_type: modelMimeType || 'image/jpeg', data: modelImageBase64 } });
+    }
+    parts.push({ text: prompt });
+
+    const ALLOWED_RATIOS = ['1:1','2:3','3:2','3:4','4:3','4:5','5:4','9:16','16:9','21:9'];
+    const imageConfig = ALLOWED_RATIOS.includes(aspectRatio) ? { aspectRatio } : undefined;
 
     const payload = {
       contents: [{ role: 'user', parts }],
-      generationConfig: { responseModalities: ['IMAGE'] }
+      generationConfig: imageConfig
+        ? { responseModalities: ['IMAGE'], imageConfig }
+        : { responseModalities: ['IMAGE'] }
     };
 
     const r = await fetch(`${ENDPOINT}?key=${key}`, {

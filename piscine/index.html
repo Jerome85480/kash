@@ -7,6 +7,15 @@
 <meta name="description" content="Projetez une piscine coque Génération Piscine sur la photo de votre terrain. Choisissez le modèle, la couleur des margelles et de la terrasse. Rendu photoréaliste par IA.">
 <meta name="theme-color" content="#1c4d80">
 <link rel="icon" href="assets/logo.jpg">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<!-- Icône écran d'accueil iPhone/iPad (Ajouter à l'écran d'accueil) -->
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Piscine Avenue">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Manifest PWA (icône + nom écran d'accueil Android) -->
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -65,7 +74,7 @@
   .src-btn.alt{background:#fff;color:var(--navy);border:1.5px solid var(--line);}
   .preview{position:relative;border-radius:16px;overflow:hidden;display:none;box-shadow:var(--shadow);}
   .preview img{width:100%;display:block;max-height:340px;object-fit:cover;}
-  .preview .prev-actions{position:absolute;top:.6rem;right:.6rem;display:flex;gap:.4rem;}
+  .preview .prev-actions{position:absolute;top:.6rem;right:.6rem;display:flex;gap:.4rem;z-index:10;}
   .preview .chg{background:rgba(255,255,255,.94);border:none;
     border-radius:100px;padding:.45rem .9rem;font-size:.78rem;font-weight:600;color:var(--navy);cursor:pointer;box-shadow:var(--shadow);}
   .preview .del{color:var(--err);}
@@ -78,6 +87,14 @@
   .model-tag .mt-txt span{color:var(--muted);font-size:.74rem;}
   .model-tag .mt-hint{margin-left:auto;flex:0 0 auto;max-width:38%;text-align:right;font-size:.66rem;
     font-weight:600;color:var(--orange);line-height:1.2;}
+
+  /* ZONE MARKER */
+  .zone-wrap{position:absolute;inset:0;z-index:4;cursor:crosshair;}
+  #zoneBox{position:absolute;border:2.5px dashed #e8732a;background:rgba(232,115,42,.06);cursor:move;box-sizing:border-box;min-width:30px;min-height:30px;}
+  .zh{position:absolute;width:14px;height:14px;background:#e8732a;border:2px solid #fff;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.45);}
+  .zh.tl{top:-7px;left:-7px;cursor:nw-resize;} .zh.br{bottom:-7px;right:-7px;cursor:se-resize;}
+  #zoneBox .zlbl{position:absolute;top:0;left:0;background:rgba(232,115,42,.9);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-bottom-right-radius:5px;white-space:nowrap;pointer-events:none;}
+  .chg.zone-on{background:var(--orange)!important;color:#fff!important;}
 
   /* MODELS */
   .tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.6rem;margin-bottom:.4rem;-webkit-overflow-scrolling:touch;}
@@ -109,6 +126,10 @@
   .chip:hover{border-color:var(--teal);}
   .chip.on{border-color:var(--navy);background:#f0f7fd;}
   .sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+  .echelle{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.84rem;color:var(--ink);}
+  .echelle input{width:90px;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;font-family:inherit;font-size:.9rem;outline:none;background:#fbfdff;}
+  .echelle input:focus{border-color:var(--teal);background:#fff;}
+  .echelle b{color:var(--navy);}
 
   /* CTA */
   .cta{width:100%;margin-top:.4rem;background:linear-gradient(135deg,var(--orange),var(--orange-light));
@@ -135,6 +156,8 @@
   .btn-re{background:#fff;color:var(--navy);border:1.5px solid var(--line)!important;} .btn-re:hover{border-color:var(--teal)!important;}
   .btn-new{grid-column:1/-1;background:transparent;color:var(--muted);font-weight:600!important;}
   .btn-share{grid-column:1/-1;background:linear-gradient(135deg,#2bb673,#1e9e63);color:#fff;}
+  .btn-pdf{grid-column:1/-1;background:#fff;color:var(--navy);border:1.5px solid var(--line)!important;}
+  .btn-pdf:hover{border-color:var(--teal)!important;}
   .btn-share:hover{filter:brightness(1.06);}
 
   /* LOADER */
@@ -199,7 +222,8 @@
     <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
-      <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg del" id="del">Supprimer</button></div>
+      <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg" id="btnZone" title="Délimiter la zone d'implantation">📍 Zone</button><button class="chg del" id="del">Supprimer</button></div>
+      <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zlbl">Zone implantation</div></div></div>
       <div class="model-tag" id="modelTag">
         <img id="modelTagImg" alt="">
         <div class="mt-txt"><b id="modelTagName"></b><span id="modelTagDim"></span></div>
@@ -226,6 +250,11 @@
     <div class="opt-group"><label>Options de la piscine <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optOptions"></div></div>
     <div class="opt-group"><label>Ambiance / moment</label><div class="chips" id="optAmbiance"></div></div>
     <div class="opt-group"><label>Aménagements autour <span style="font-weight:500;color:var(--muted)">(plusieurs possibles)</span></label><div class="chips" id="optAmenag"></div></div>
+    <div class="opt-group"><label>Échelle réelle <span style="font-weight:500;color:var(--muted)">(optionnel — pour la bonne taille)</span></label>
+      <div class="echelle"><span>Largeur dégagée au sol à l'emplacement de la piscine :</span>
+        <input type="number" id="echelleInput" min="2" max="40" step="0.5" inputmode="decimal" placeholder="ex. 8"> <b>m</b></div>
+      <p class="hint" style="margin:.4rem 0 0">Indiquez la largeur réelle du terrain dégagé : la piscine sera dimensionnée à la bonne échelle.</p>
+    </div>
   </section>
 
   <!-- STEP 4 — GENERATE -->
@@ -248,6 +277,7 @@
         <button class="btn-share" id="share">📤 Envoyer au client</button>
         <button class="btn-dl" id="dl">⬇ Télécharger</button>
         <button class="btn-re" id="regen">↻ Régénérer</button>
+        <button class="btn-pdf" id="btnPdf">📄 Fiche PDF client</button>
         <button class="btn-new" id="newp">Nouveau projet</button>
       </div>
     </div>
@@ -278,12 +308,12 @@ const EAU = [
   {id:'sable', label:'Sable', sw:'#d8c6a0', p:'coque couleur sable, eau vert d\'eau lagon translucide'}
 ];
 const MARG = [
-  {id:'blanc', label:'Blanc', sw:'#f3f1ec', p:'margelles blanches'},
-  {id:'gris-clair', label:'Gris clair', sw:'#cfd4d6', p:'margelles gris clair'},
-  {id:'anthracite', label:'Anthracite', sw:'#48505a', p:'margelles gris anthracite'},
-  {id:'beige', label:'Beige / sable', sw:'#d9c7a3', p:'margelles beige sable'},
-  {id:'pierre', label:'Pierre naturelle', sw:'#c9bfa8', p:'margelles en pierre naturelle reconstituée'},
-  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'margelles en travertin clair'}
+  {id:'blanc', label:'Blanc', sw:'#f3f1ec', p:'un rebord de margelles carrelées blanches d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'gris-clair', label:'Gris clair', sw:'#cfd4d6', p:'un rebord de margelles gris clair d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'anthracite', label:'Anthracite', sw:'#48505a', p:'un rebord de margelles gris anthracite d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'beige', label:'Beige / sable', sw:'#d9c7a3', p:'un rebord de margelles beige sable d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'pierre', label:'Pierre naturelle', sw:'#c9bfa8', p:'un rebord de margelles en pierre naturelle reconstituée d\'environ 35 cm de large ceinturant entièrement le bassin'},
+  {id:'travertin', label:'Travertin', sw:'#e3d4b8', p:'un rebord de margelles en travertin clair d\'environ 35 cm de large ceinturant entièrement le bassin'}
 ];
 const TER = [
   {id:'bois', label:'Bois exotique', sw:'#a9743f', p:'terrasse en lames de bois exotique'},
@@ -301,7 +331,8 @@ const TAILLE = [
 ];
 
 const OPTIONS = [
-  {id:'volet', label:'Volet immergé', sw:'#9fb6c6', p:'un volet roulant immergé (banquette en bout de bassin)'},
+  {id:'volet', label:'Volet immergé', sw:'#9fb6c6', p:'un volet roulant immergé (banquette en bout de bassin, lames de volet affleurant la surface de l\'eau)'},
+  {id:'volet-hs', label:'Volet hors-sol', sw:'#c8d2da', p:'un volet roulant HORS-SOL posé sur les margelles à l\'une des extrémités du bassin : un coffre/enrouleur cylindrique visible au-dessus du niveau de l\'eau, avec les lames du volet roulées dessus, en bout de piscine'},
   {id:'plage', label:'Plage immergée', sw:'#bcdcea', p:"une plage immergée (large marche d'eau peu profonde)"},
   {id:'escalier', label:"Escalier d'angle", sw:'#cdd6db', p:"un escalier d'angle intégré"},
   {id:'led', label:'Éclairage LED', sw:'#ffd56b', p:'un éclairage LED immergé dans le bassin'},
@@ -319,7 +350,7 @@ const AMENAG = [
   {id:'douche', label:'Douche ext.', sw:'#9aa7b0', p:'une douche extérieure design'}
 ];
 
-const state = { photo:null, photoMime:'image/jpeg', model:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null };
+const state = { photo:null, photoMime:'image/jpeg', model:null, modelImg:null, modelImgP:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null, zone:{active:false,l:0.12,t:0.18,r:0.88,b:0.82}, echelleM:0 };
 
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
@@ -422,6 +453,7 @@ function buildChipsMulti(host,arr,key){
 }
 buildChips('#optEau',EAU,'eau'); buildChips('#optMarg',MARG,'marg'); buildChips('#optTer',TER,'ter'); buildChips('#optTaille',TAILLE,'taille');
 buildChipsMulti('#optOptions',OPTIONS,'options'); buildChips('#optAmbiance',AMBIANCE,'ambiance'); buildChipsMulti('#optAmenag',AMENAG,'amenag');
+$('#echelleInput').oninput=e=>{ const v=parseFloat(e.target.value); state.echelleM=(isFinite(v)&&v>0)?v:0; };
 
 /* ============ aperçu du modèle + composite pour le rendu ============ */
 function showModelTag(){
@@ -441,42 +473,44 @@ function showModelTag(){
   buildComposite();
 }
 
-// Crée une version composite de la photo avec le plan du modèle incrusté dans le coin.
-// Renvoie une Promise résolue avec le dataURL composite (ou null en cas d'échec).
-// Stocke aussi state.composite et garde la promesse dans state.compositeP pour que
-// generate() puisse l'awaiter même si le plan n'est pas encore chargé.
+// Récupère la VRAIE PHOTO du modèle sélectionné (via le proxy CORS /api/plan) et la
+// convertit en base64. Elle sera envoyée comme 2e image à Gemini : il reproduit ainsi
+// fidèlement la forme/les marches/la teinte d'eau du modèle réel. La promesse est gardée
+// dans state.modelImgP pour que generate() puisse l'attendre.
 function buildComposite(){
-  state.composite=null;
-  if(!state.model||!state.model.image||!state.photo){ state.compositeP=null; return; }
-  state.compositeP=new Promise(resolve=>{
-    const planImg=new Image(); planImg.crossOrigin='anonymous';
-    planImg.onload=()=>{
-      try{
-        const terrain=new Image();
-        terrain.onload=()=>{
-          const W=terrain.naturalWidth, H=terrain.naturalHeight;
-          const c=document.createElement('canvas'); c.width=W; c.height=H;
-          const x=c.getContext('2d');
-          x.drawImage(terrain,0,0,W,H);
-          const vw=Math.round(W*0.23);
-          const vh=Math.round(planImg.naturalHeight*vw/planImg.naturalWidth);
-          const mx=8,my=8;
-          x.shadowColor='rgba(0,0,0,0.4)'; x.shadowBlur=8;
-          x.fillStyle='#fff'; x.fillRect(W-vw-mx-4,H-vh-my-22,vw+8,vh+26);
-          x.shadowColor='transparent'; x.shadowBlur=0;
-          x.drawImage(planImg,W-vw-mx,H-vh-my,vw,vh);
-          x.fillStyle='rgba(11,42,74,0.82)'; x.fillRect(W-vw-mx,H-vh-my-20,vw,20);
-          x.fillStyle='#fff'; x.font='bold '+(Math.round(W*0.012))+'px sans-serif';
-          x.fillText('Forme de référence',W-vw-mx+4,H-vh-my-6);
-          state.composite=c.toDataURL('image/jpeg',0.92);
-          resolve(state.composite);
-        };
-        terrain.onerror=()=>resolve(null);
-        terrain.src=state.photo;
-      }catch(_){ resolve(null); }
-    };
-    planImg.onerror=()=>{ state.composite=null; resolve(null); };
-    planImg.src='/api/plan?url='+encodeURIComponent(state.model.image);
+  state.modelImg=null;
+  if(!state.model||!state.model.image){ state.modelImgP=null; return; }
+  const url='/api/plan?url='+encodeURIComponent(state.model.image);
+  state.modelImgP=fetch(url,{cache:'force-cache'})
+    .then(r=>r.ok?r.blob():Promise.reject())
+    .then(blob=>new Promise((resolve)=>{
+      const fr=new FileReader();
+      fr.onload=()=>{
+        const dataUrl=fr.result;
+        const comma=dataUrl.indexOf(',');
+        state.modelImg={ base64:dataUrl.slice(comma+1), mime:(blob.type||'image/jpeg') };
+        resolve(state.modelImg);
+      };
+      fr.onerror=()=>resolve(null);
+      fr.readAsDataURL(blob);
+    }))
+    .catch(()=>{ state.modelImg=null; return null; });
+}
+
+// Choisit le format de sortie Gemini le plus proche des proportions de la photo terrain.
+function pickAspect(w,h){
+  if(!w||!h) return '4:3';
+  const r=w/h;
+  const opts={'1:1':1,'2:3':2/3,'3:2':3/2,'3:4':3/4,'4:3':4/3,'4:5':4/5,'5:4':5/4,'9:16':9/16,'16:9':16/9,'21:9':21/9};
+  let best='4:3',bd=1e9;
+  for(const k in opts){ const d=Math.abs(opts[k]-r); if(d<bd){bd=d;best=k;} }
+  return best;
+}
+// Dimensions naturelles de la photo terrain (pour le format de sortie).
+function terrainDims(){
+  return new Promise(resolve=>{
+    if(!state.photo) return resolve({w:0,h:0});
+    const i=new Image(); i.onload=()=>resolve({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>resolve({w:0,h:0}); i.src=state.photo;
   });
 }
 
@@ -492,27 +526,62 @@ function refreshGate(){
 }
 
 /* ============ prompt ============ */
+// Construit une description textuelle précise de la forme du bassin propre à CE modèle :
+// catégorie de forme, proportions exactes (ratio L/l), type de fond, entrée plage, couloir de nage.
+// Objectif : que l'IA reproduise la silhouette du modèle choisi et pas une piscine générique.
 function formeDesc(m){
   const f=(m.forme||'').toLowerCase();
-  if(f.includes('couloir')) return 'rectangulaire très allongée (couloir de nage)';
-  if(f.includes('ovale')) return 'ovale aux bords arrondis';
-  if(f.includes('carr')) return 'carrée';
-  return 'rectangulaire aux angles légèrement arrondis';
+  const g=(m.gamme||'').toLowerCase();
+  const L=+m.longueur||0, l=+m.largeur||0;
+  const ratio = (L&&l)? L/l : 0;       // proportions réelles = source de vérité
+  let base, prop='';
+  if(f.includes('couloir')||ratio>=2.6){
+    base=`un couloir de nage rectangulaire étroit et très allongé, aux angles vifs`;
+    if(ratio) prop=`environ ${Math.round(ratio*10)/10} fois plus long que large`;
+  } else if(f.includes('ovale')){
+    base=`un bassin de forme ovale arrondie, sans angle, aux deux extrémités demi-circulaires`;
+    if(ratio>=1.7) prop=`nettement allongé`;
+  } else if(ratio ? ratio<1.2 : f.includes('carr')){
+    base=`un bassin de forme carrée, longueur et largeur quasiment égales, aux angles légèrement arrondis`;
+  } else {
+    base=`un bassin rectangulaire aux quatre angles légèrement arrondis`;
+    if(ratio>=2.1) prop=`nettement allongé (plus de 2 fois plus long que large)`;
+    else if(ratio>=1.7) prop=`allongé (environ 2 fois plus long que large)`;
+    else if(ratio>=1.35) prop=`aux proportions classiques (environ 1,5 fois plus long que large)`;
+    else if(ratio) prop=`presque carré (à peine plus long que large)`;
+  }
+  const plageNote = /plage/.test(g)
+    ? `. Ce modèle intègre une large PLAGE IMMERGÉE : une grande marche d'eau peu profonde occupant toute la largeur à l'une des extrémités (zone d'eau plus claire)`
+    : '';
+  let fond='';
+  if(f.includes('progressif')) fond=`. Fond à profondeur progressive (zone peu profonde plus claire d'un côté, plus profonde et plus foncée de l'autre)`;
+  else if(f.includes('incliné')) fond=`. Fond incliné régulier (léger dégradé de profondeur visible dans la teinte de l'eau)`;
+  else if(f.includes('fond plat')) fond=`. Fond plat, profondeur homogène (teinte d'eau uniforme)`;
+  return `${base}${prop?', '+prop:''}${plageNote}${fond}`;
 }
 function buildPrompt(){
   const m=state.model;
-  const dim=m.cote?` d'environ ${m.longueurStr} m de long sur ${m.largeurStr} m de large${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
-  const withPlan=!!state.composite;
-  const planNote=withPlan
-    ? `Cette photo contient dans le coin bas-droit une petite vignette intitulée 'Forme de référence' — c'est le plan technique vu de dessus du modèle exact à installer. Utilise-la UNIQUEMENT pour reproduire fidèlement la forme et les proportions de la piscine. Cette vignette doit disparaître dans l'image finale. `
+  const dim=m.cote?`, dimensions réelles ${m.longueurStr} m × ${m.largeurStr} m${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
+  const withModel=!!state.modelImg;   // 2e image = vraie photo du modèle
+  const modelNote=withModel
+    ? `L'IMAGE 2 est une VRAIE PHOTO du modèle de piscine exact à installer : reproduis fidèlement sa forme, ses marches/escaliers, la teinte de son eau et ses margelles, en l'intégrant en perspective dans le jardin de l'image 1. `
     : '';
-  return `ÉDITE cette photographie : ajoute UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
-   +`RÈGLE ABSOLUE : conserve la photo EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas. `
+  // Échelle réelle : si l'utilisateur a indiqué une largeur réelle au sol, on aide
+  // l'IA à dimensionner la piscine correctement par rapport à la scène.
+  let echelleNote='';
+  if(state.echelleM>0 && m.longueur){
+    const pct=Math.round(Math.min(98, (m.longueur/state.echelleM)*100));
+    echelleNote=`ÉCHELLE : à l'emplacement de la piscine, la largeur dégagée au sol mesure environ ${state.echelleM} m en réalité ; la piscine (${m.longueurStr} m de long) doit donc occuper environ ${pct}% de cette largeur. Respecte cette échelle réaliste, ni trop grande ni trop petite. `;
+  }
+  return `${withModel?'IMAGE 1 = ':''}photographie du jardin d'un client. ÉDITE-la : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
+   +`RÈGLE ABSOLUE : conserve l'image du jardin EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas, ne passe pas en portrait. `
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
-   +planNote
-   +`Creuse dans le sol au premier plan une piscine coque de forme ${formeDesc(m)}${dim} (modèle « ${m.nom} » de Génération Piscine). `
-   +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo d'origine. Aucune vue de dessus, aucun plan, aucun schéma. `
-   +`${state.eau.p}. ${state.marg.p}. ${state.ter.p} sur le pourtour immédiat de la piscine. `
+   +modelNote
+   +`Il s'agit du modèle exact « ${m.nom} » de Génération Piscine (gamme ${m.gamme})${dim} : ${formeDesc(m)}. `
+   +`Respecte SCRUPULEUSEMENT cette forme et ces proportions — ne dessine pas une piscine rectangulaire générique différente du modèle. `
+   +echelleNote
+   +`Intègre-la de façon strictement PHOTORÉALISTE : perspective, échelle, profondeur, éclairage, ombres portées et reflets cohérents avec la photo du jardin. Aucune vue de dessus, aucun plan, aucun schéma. `
+   +`FINITIONS OBLIGATOIRES : ${state.eau.p}. Pose ${state.marg.p} — ce rebord de margelles doit être clairement visible tout autour du bassin dans le rendu. ${state.ter.p} autour des margelles. `
    +(state.taille.p?(state.taille.p+' '):'')
    +(state.options.length?('La piscine comporte : '+state.options.map(o=>o.p).join(', ')+'. '):'')
    +(state.amenag.length?('Ajoute autour de la piscine : '+state.amenag.map(o=>o.p).join(', ')+'. '):'')
@@ -520,7 +589,10 @@ function buildPrompt(){
    +(state.ambiance.id==='jour'
        ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
        : `Conserve la composition et les éléments existants (maison, clôtures, cadrage, format), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
-   +`Conserve impérativement le format/les proportions de la photo d'origine. Résultat haute résolution, sans texte ni filigrane.`;
+   +(state.zone&&state.zone.active
+       ? `IMPÉRATIF : la piscine DOIT être creusée EXACTEMENT dans la zone délimitée par le cadre orange libellé "Zone implantation" visible dans la photo. Ne place pas la piscine en dehors de cette zone. `
+       : '')
+   +`FORMAT DE SORTIE : strictement identique à la photo du jardin (même orientation paysage/portrait, même proportions). Résultat haute résolution, sans texte ni filigrane.`;
 }
 
 /* ============ generate ============ */
@@ -530,14 +602,23 @@ async function generate(){
   $('#loader').classList.add('on');
   $('#gen').disabled=true;
   $('#s4').scrollIntoView({behavior:'smooth',block:'center'});
-  // Attend que le composite soit prêt (max 8s) avant d'envoyer.
-  // Sans cette attente, si l'utilisateur clique vite après avoir choisi le modèle,
-  // state.composite est encore null et Gemini génère une piscine générique.
-  if(state.compositeP) await Promise.race([state.compositeP, new Promise(r=>setTimeout(r,8000))]).catch(()=>{});
+  // Attend que la vraie photo du modèle soit chargée (max 8s) avant d'envoyer.
+  if(state.modelImgP) await Promise.race([state.modelImgP, new Promise(r=>setTimeout(r,8000))]).catch(()=>{});
+  // Image du terrain (avec la zone dessinée dessus si activée).
+  let imgToSend=state.photo;
+  if(state.zone&&state.zone.active) imgToSend=await applyZoneToImage(imgToSend).catch(()=>imgToSend);
+  const dims=await terrainDims();
+  const payload={
+    imageBase64: imgToSend.split(',')[1],
+    mimeType: state.photoMime,
+    prompt: buildPrompt(),
+    aspectRatio: pickAspect(dims.w,dims.h)
+  };
+  if(state.modelImg){ payload.modelImageBase64=state.modelImg.base64; payload.modelMimeType=state.modelImg.mime; }
   try{
     const res=await fetch('/api/render',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ imageBase64: (state.composite||state.photo).split(',')[1], mimeType: state.photoMime, prompt: buildPrompt() })
+      body:JSON.stringify(payload)
     });
     const rawTxt=await res.text();
     let data;
@@ -586,6 +667,89 @@ function setSlider(pct){
   cmp.addEventListener('touchmove',e=>{if(drag)move(e.touches[0].clientX);},{passive:true});
   window.addEventListener('touchend',end);
 })();
+
+/* ============ Zone marker ============ */
+function renderZoneBox(){
+  const z=state.zone,box=$('#zoneBox');
+  box.style.left=(z.l*100)+'%'; box.style.top=(z.t*100)+'%';
+  box.style.width=((z.r-z.l)*100)+'%'; box.style.height=((z.b-z.t)*100)+'%';
+}
+function toggleZone(){
+  if(!state.photo){ toast('Importez une photo du terrain d\'abord.'); return; }
+  state.zone.active=!state.zone.active;
+  $('#zoneWrap').style.display=state.zone.active?'block':'none';
+  $('#btnZone').classList.toggle('zone-on',state.zone.active);
+  if(state.zone.active) renderZoneBox();
+}
+$('#btnZone').onclick=toggleZone;
+
+(function(){
+  const wrap=$('#zoneWrap'),box=$('#zoneBox'),tl=$('#zhTl'),br=$('#zhBr');
+  let drag=null;
+  const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+  function pxy(e){ const r=wrap.getBoundingClientRect(),pt=e.touches?e.touches[0]:e; return{x:(pt.clientX-r.left)/r.width,y:(pt.clientY-r.top)/r.height}; }
+  function startDrag(mode,e){ e.preventDefault();e.stopPropagation(); const p=pxy(e),z=state.zone; drag={mode,sx:p.x,sy:p.y,sl:z.l,st:z.t,sr:z.r,sb:z.b}; }
+  function onMove(e){
+    if(!drag)return;
+    const p=pxy(e),dx=p.x-drag.sx,dy=p.y-drag.sy,z=state.zone,mn=0.06;
+    if(drag.mode==='move'){ const w=drag.sr-drag.sl,h=drag.sb-drag.st; z.l=clamp(drag.sl+dx,0,1-w);z.t=clamp(drag.st+dy,0,1-h);z.r=z.l+w;z.b=z.t+h; }
+    else if(drag.mode==='tl'){ z.l=clamp(drag.sl+dx,0,drag.sr-mn);z.t=clamp(drag.st+dy,0,drag.sb-mn); }
+    else if(drag.mode==='br'){ z.r=clamp(drag.sr+dx,drag.sl+mn,1);z.b=clamp(drag.sb+dy,drag.st+mn,1); }
+    renderZoneBox();
+  }
+  function end(){ drag=null; }
+  box.addEventListener('mousedown',e=>startDrag('move',e));
+  tl.addEventListener('mousedown',e=>startDrag('tl',e));
+  br.addEventListener('mousedown',e=>startDrag('br',e));
+  box.addEventListener('touchstart',e=>startDrag('move',e),{passive:false});
+  tl.addEventListener('touchstart',e=>startDrag('tl',e),{passive:false});
+  br.addEventListener('touchstart',e=>startDrag('br',e),{passive:false});
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('touchmove',e=>{if(drag){e.preventDefault();onMove(e);}},{passive:false});
+  window.addEventListener('mouseup',end);
+  window.addEventListener('touchend',end);
+  // Redraw zone from scratch by clicking empty area of wrap
+  wrap.addEventListener('mousedown',e=>{
+    if(e.target!==wrap)return;
+    const p=pxy(e),z=state.zone;
+    z.l=p.x;z.t=p.y;z.r=p.x+0.01;z.b=p.y+0.01;
+    drag={mode:'br',sx:p.x,sy:p.y,sl:p.x,st:p.y,sr:p.x+0.01,sb:p.y+0.01};
+    renderZoneBox();
+  });
+})();
+
+// Draws the zone rectangle onto a data URL image (composite or photo) before sending to Gemini.
+// Converts display-space fractions to natural image coordinates via object-fit:cover math.
+function applyZoneToImage(dataUrl){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const nW=img.naturalWidth,nH=img.naturalHeight;
+      const pi=$('#previmg'),dW=pi.offsetWidth,dH=pi.offsetHeight;
+      const scale=Math.max(dW/nW,dH/nH);
+      const ox=(nW-dW/scale)/2,oy=(nH-dH/scale)/2;
+      const z=state.zone;
+      const nx=ox+z.l*dW/scale,ny=oy+z.t*dH/scale;
+      const nw=(z.r-z.l)*dW/scale,nh=(z.b-z.t)*dH/scale;
+      const c=document.createElement('canvas');c.width=nW;c.height=nH;
+      const x=c.getContext('2d');
+      x.drawImage(img,0,0);
+      const lw=Math.max(4,Math.round(nW*0.004));
+      x.strokeStyle='#e8732a';x.lineWidth=lw;x.setLineDash([Math.round(nW*0.025),Math.round(nW*0.012)]);
+      x.strokeRect(nx+lw/2,ny+lw/2,nw-lw,nh-lw);
+      x.fillStyle='rgba(232,115,42,0.06)';x.fillRect(nx,ny,nw,nh);
+      x.setLineDash([]);
+      const fs=Math.max(14,Math.round(nW*0.015));
+      const lblW=Math.round(nw*0.7);
+      x.fillStyle='rgba(232,115,42,0.9)';x.fillRect(nx,ny,lblW,fs*1.5);
+      x.fillStyle='#fff';x.font=`700 ${fs}px sans-serif`;x.textBaseline='top';
+      x.fillText('Zone implantation',nx+5,ny+fs*0.25);
+      resolve(c.toDataURL('image/jpeg',0.92));
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+}
 
 /* ============ fiche client (image brandée) + partage ============ */
 const logoImg=new Image(); logoImg.src='assets/logo.jpg';
@@ -656,6 +820,86 @@ $('#share').onclick=async()=>{
 
 $('#newp').onclick=()=>{ location.reload(); };
 
+/* ============ PDF fiche client ============ */
+function downloadPdf(){
+  if(!state.result){ toast('Générez d\'abord un rendu.'); return; }
+  const m=state.model||{nom:'',gamme:'',forme:'',cote:'',profondeur:''};
+  const dim=m.cote?`${m.cote}${m.profondeur?' · prof. '+m.profondeur:''}`:'';
+  const opts=state.options.map(o=>o.label).join(', ')||'—';
+  const amgs=state.amenag.map(o=>o.label).join(', ')||'—';
+  const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc=window.location.origin+'/piscine/assets/logo.jpg';
+  const html=`<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8"><title>Fiche projet — ${m.nom} — Piscine Avenue</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;color:#1a2b3c;background:#fff;}
+.page{max-width:780px;margin:0 auto;padding:28px 24px;}
+header{display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:3px solid #e8732a;margin-bottom:22px;}
+header img{width:60px;height:60px;border-radius:10px;object-fit:cover;}
+.bn{font-family:'Poppins';font-weight:800;font-size:1.3rem;color:#1c4d80;}
+.bs{font-size:.8rem;color:#6b8095;}
+.ht{margin-left:auto;text-align:right;font-family:'Poppins';font-weight:700;font-size:1rem;color:#1c4d80;}
+.ht small{display:block;font-weight:500;font-size:.77rem;color:#6b8095;}
+.ri{width:100%;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.14);margin-bottom:22px;display:block;}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.bx{background:#f4fafe;border:1px solid #d4e9f7;border-radius:10px;padding:14px;}
+.bx h3{font-family:'Poppins';font-weight:700;font-size:.76rem;color:#1c4d80;text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px;}
+.rw{display:flex;justify-content:space-between;align-items:baseline;font-size:.82rem;padding:4px 0;border-bottom:1px solid #e4eff8;}
+.rw:last-child{border:none;}
+.rw label{color:#6b8095;flex-shrink:0;margin-right:8px;}
+.rw span{font-weight:600;color:#1a2b3c;text-align:right;}
+.ct{background:#1c4d80;color:#fff;border-radius:10px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.cn{font-family:'Poppins';font-weight:700;font-size:.98rem;}
+.cs{font-size:.78rem;opacity:.75;margin-top:3px;}
+.badge{background:#e8732a;color:#fff;font-weight:700;font-size:.74rem;padding:5px 13px;border-radius:100px;white-space:nowrap;}
+.note{font-size:.68rem;color:#9fb3c4;text-align:center;margin-top:14px;line-height:1.5;}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.page{padding:10px;}}</style>
+</head><body>
+<div class="page">
+<header>
+  <img src="${logoSrc}" alt="Piscine Avenue">
+  <div><div class="bn">Piscine Avenue</div><div class="bs">Pisciniste · La Roche-sur-Yon (Vendée)</div></div>
+  <div class="ht">Fiche projet piscine<small>${today}</small></div>
+</header>
+<img class="ri" src="${state.result}" alt="Rendu ${m.nom}">
+<div class="gr">
+  <div class="bx"><h3>Modèle</h3>
+    <div class="rw"><label>Nom</label><span>${m.nom}</span></div>
+    <div class="rw"><label>Gamme</label><span>${m.gamme}</span></div>
+    ${dim?`<div class="rw"><label>Dimensions</label><span>${dim}</span></div>`:''}
+    <div class="rw"><label>Forme</label><span>${m.forme}</span></div>
+  </div>
+  <div class="bx"><h3>Finitions</h3>
+    <div class="rw"><label>Coque / eau</label><span>${state.eau.label}</span></div>
+    <div class="rw"><label>Margelles</label><span>${state.marg.label}</span></div>
+    <div class="rw"><label>Terrasse</label><span>${state.ter.label}</span></div>
+    <div class="rw"><label>Taille</label><span>${state.taille.label}</span></div>
+  </div>
+  <div class="bx"><h3>Options & aménagements</h3>
+    <div class="rw"><label>Équipements</label><span>${opts}</span></div>
+    <div class="rw"><label>Aménagements</label><span>${amgs}</span></div>
+    <div class="rw"><label>Ambiance</label><span>${state.ambiance.label}</span></div>
+  </div>
+  <div class="bx"><h3>À noter</h3>
+    <div class="rw" style="border:none"><label style="color:#1a2b3c;font-size:.79rem;line-height:1.45">Ce rendu est généré par IA à titre indicatif. Un devis personnalisé vous sera remis par votre pisciniste. Des variations peuvent exister par rapport au résultat final installé.</label></div>
+  </div>
+</div>
+<div class="ct">
+  <div><div class="cn">Piscine Avenue</div><div class="cs">Pisciniste à La Roche-sur-Yon — Piscines coque polyester Génération Piscine</div></div>
+  <div class="badge">Devis gratuit</div>
+</div>
+<p class="note">Rendu photoréaliste généré par IA · Modèle ${m.nom}, gamme ${m.gamme} · Génération Piscine · piscine-avenue.fr</p>
+</div>
+<script>window.onload=()=>setTimeout(()=>window.print(),500);<\/script>
+</body></html>`;
+  const w=window.open('','_blank');
+  if(w){ w.document.write(html); w.document.close(); }
+  else toast('Autorisez les pop-ups pour générer la fiche PDF.');
+}
+$('#btnPdf').onclick=downloadPdf;
+
 /* ============ history (localStorage) ============ */
 function saveHistory(){
   try{
@@ -675,6 +919,11 @@ function renderHistory(){
   });
 }
 renderHistory();
+
+/* ============ PWA : enregistre le service worker (rend l'app installable avec son logo) ============ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>

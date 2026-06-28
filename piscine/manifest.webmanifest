@@ -1,0 +1,16 @@
+{
+  "name": "Piscine Avenue — Visualisez votre piscine",
+  "short_name": "Piscine Avenue",
+  "description": "Projetez une piscine coque Génération Piscine sur la photo de votre terrain. Rendu photoréaliste par IA.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1c4d80",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
