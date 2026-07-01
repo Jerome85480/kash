@@ -96,6 +96,8 @@
     box-shadow:0 0 0 2px rgba(232,115,42,.85),0 6px 18px rgba(11,42,74,.35),inset 0 0 22px rgba(255,255,255,.28);}
   .zh{position:absolute;width:16px;height:16px;background:#e8732a;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.45);}
   .zh.tl{top:-8px;left:-8px;cursor:nw-resize;} .zh.br{bottom:-8px;right:-8px;cursor:se-resize;}
+  .zh.rm{top:50%;right:-8px;margin-top:-8px;cursor:ew-resize;border-radius:4px;}
+  .zh.bm{bottom:-8px;left:50%;margin-left:-8px;cursor:ns-resize;border-radius:4px;}
   .zh.rc{top:-34px;left:50%;margin-left:-11px;width:22px;height:22px;cursor:grab;display:grid;place-items:center;
     color:#fff;font-size:.72rem;font-weight:700;line-height:1;}
   #zoneBox .rstem{position:absolute;top:-14px;left:50%;width:2px;height:14px;background:rgba(255,255,255,.9);pointer-events:none;}
@@ -230,7 +232,7 @@
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
       <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg" id="btnZone" title="Positionner la piscine sur la photo">📍 Position</button><button class="chg del" id="del">Supprimer</button></div>
-      <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="rstem"></div><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zh rc" id="zhRot" title="Pivoter">↻</div><div class="zlbl">Zone implantation</div></div></div>
+      <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="rstem"></div><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zh rm" id="zhRm" title="Largeur"></div><div class="zh bm" id="zhBm" title="Longueur"></div><div class="zh rc" id="zhRot" title="Pivoter">↻</div><div class="zlbl">Zone implantation</div></div></div>
       <div class="model-tag" id="modelTag">
         <img id="modelTagImg" alt="">
         <div class="mt-txt"><b id="modelTagName"></b><span id="modelTagDim"></span></div>
@@ -298,7 +300,7 @@
   <footer>
     <b>Piscine Avenue</b> — Pisciniste, La Roche-sur-Yon (Vendée).<br>
     Piscines coque polyester <a href="https://www.generationpiscine.com" target="_blank" rel="noopener">Génération Piscine</a>.
-    Rendus générés par IA, à titre indicatif.
+    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v7</span>
   </footer>
 </div>
 
@@ -584,8 +586,12 @@ function buildPrompt(){
     const pct=Math.round(Math.min(98, (m.longueur/state.echelleM)*100));
     echelleNote=`ÉCHELLE : à l'emplacement de la piscine, la largeur dégagée au sol mesure environ ${state.echelleM} m en réalité ; la piscine (${m.longueurStr} m de long) doit donc occuper environ ${pct}% de cette largeur. Respecte cette échelle réaliste, ni trop grande ni trop petite. `;
   }
+  const zoneNote=(state.zone&&state.zone.active)
+    ? `PLACEMENT OBLIGATOIRE : un MARQUAGE bleu semi-transparent en pointillés blancs est dessiné sur la photo du jardin. Ce marquage est une ANNOTATION de chantier, PAS un objet de la scène : il indique où creuser. La piscine DOIT être creusée EXACTEMENT à l'emplacement de ce marquage : le CENTRE de la piscine coïncide avec le centre du marquage, ses bords suivent les bords du marquage (même surface au sol), et son axe suit le même angle que le marquage (y compris s'il est incliné/tourné). INTERDIT de placer la piscine ailleurs, de la recentrer, de la faire déborder largement du marquage ou de changer son angle. Si le marquage recouvre de la végétation ou des objets, la piscine et ses abords les remplacent à cet endroit. Dans l'image finale, le marquage bleu n'existe plus : à sa place on voit la piscine terminée et ses margelles — aucune teinte bleue, aucun pointillé, aucun contour du marquage ne doit subsister. En revanche, la FORME précise du bassin (contour, proportions, marches, arrondis) est celle du modèle décrit ci-dessous${withModel?' et visible dans l\'image 2':''} — pas le contour simplifié du marquage. `
+    : '';
   return `${withModel?'IMAGE 1 = la photographie du jardin du client : c\'est la SEULE scène de l\'image finale. ':'Photographie du jardin d\'un client. '}ÉDITE cette photo du jardin : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
    +`RÈGLE ABSOLUE : conserve l'image du jardin EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas, ne passe pas en portrait. `
+   +zoneNote
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
    +modelNote
    +`Il s'agit du modèle exact « ${m.nom} » de Génération Piscine (gamme ${m.gamme})${dim} : ${formeDesc(m)}. `
@@ -601,7 +607,7 @@ function buildPrompt(){
        ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
        : `Conserve la composition et les éléments existants (maison, clôtures, cadrage, format), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
    +(state.zone&&state.zone.active
-       ? `PLACEMENT OBLIGATOIRE : une silhouette bleue semi-transparente bordée de blanc est dessinée sur la photo du jardin. La piscine DOIT être creusée EXACTEMENT à l'emplacement de cette silhouette — même position sur la photo, même surface au sol occupée, même ORIENTATION (suis précisément l'axe et l'angle de la silhouette, y compris si elle est inclinée/tournée). INTERDIT de placer la piscine ailleurs ou avec un autre angle. En revanche, la FORME précise du bassin (contour, proportions, marches, arrondis) est celle du modèle décrit ci-dessus${withModel?' et visible dans l\'image 2':''} — pas le contour simplifié de la silhouette. La silhouette dessinée doit être entièrement remplacée par la piscine finale et ne plus apparaître. `
+       ? `RAPPEL PLACEMENT : la piscine remplace exactement le marquage bleu (position, surface, orientation identiques) et le marquage disparaît totalement. `
        : '')
    +`FORMAT DE SORTIE : strictement identique à la photo du jardin (même orientation paysage/portrait, même proportions). Résultat haute résolution, sans texte ni filigrane.`;
 }
@@ -720,7 +726,7 @@ function toggleZone(){
 $('#btnZone').onclick=toggleZone;
 
 (function(){
-  const wrap=$('#zoneWrap'),box=$('#zoneBox'),tl=$('#zhTl'),br=$('#zhBr'),rc=$('#zhRot');
+  const wrap=$('#zoneWrap'),box=$('#zoneBox'),tl=$('#zhTl'),br=$('#zhBr'),rc=$('#zhRot'),rm=$('#zhRm'),bm=$('#zhBm');
   let drag=null;
   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
   // position du pointeur en PIXELS dans le wrap (nécessaire pour les angles)
@@ -744,12 +750,15 @@ $('#btnZone').onclick=toggleZone;
     } else if(drag.mode==='rot'){
       const a=Math.atan2(p.py-drag.cy,p.px-drag.cx)+drag.a0;
       z.rot=Math.round(a*180/Math.PI);
-    } else { // tl / br : redimensionnement symétrique autour du centre, projeté dans le repère tourné
+    } else { // redimensionnement symétrique autour du centre, projeté dans le repère tourné
       const rot=(z.rot||0)*Math.PI/180;
       const dx=p.px-drag.cx, dy=p.py-drag.cy;
       const lx=Math.abs(dx*Math.cos(-rot)-dy*Math.sin(-rot));   // demi-largeur locale en px
       const ly=Math.abs(dx*Math.sin(-rot)+dy*Math.cos(-rot));   // demi-hauteur locale en px
-      const w=Math.max(mn,2*lx/drag.W), h=Math.max(mn,2*ly/drag.H);
+      let w=drag.sr-drag.sl, h=drag.sb-drag.st;
+      if(drag.mode==='rm') w=Math.max(mn,2*lx/drag.W);          // poignée droite : largeur seule
+      else if(drag.mode==='bm') h=Math.max(mn,2*ly/drag.H);     // poignée bas : longueur seule
+      else { w=Math.max(mn,2*lx/drag.W); h=Math.max(mn,2*ly/drag.H); } // coins : les deux
       const cxF=drag.cx/drag.W, cyF=drag.cy/drag.H;
       z.l=clamp(cxF-w/2,0,1);z.r=clamp(cxF+w/2,0,1);
       z.t=clamp(cyF-h/2,0,1);z.b=clamp(cyF+h/2,0,1);
@@ -757,14 +766,10 @@ $('#btnZone').onclick=toggleZone;
     renderZoneBox();
   }
   function end(){ drag=null; }
-  box.addEventListener('mousedown',e=>startDrag('move',e));
-  tl.addEventListener('mousedown',e=>startDrag('tl',e));
-  br.addEventListener('mousedown',e=>startDrag('br',e));
-  rc.addEventListener('mousedown',e=>startDrag('rot',e));
-  box.addEventListener('touchstart',e=>startDrag('move',e),{passive:false});
-  tl.addEventListener('touchstart',e=>startDrag('tl',e),{passive:false});
-  br.addEventListener('touchstart',e=>startDrag('br',e),{passive:false});
-  rc.addEventListener('touchstart',e=>startDrag('rot',e),{passive:false});
+  [['move',box],['tl',tl],['br',br],['rot',rc],['rm',rm],['bm',bm]].forEach(([mode,el])=>{
+    el.addEventListener('mousedown',e=>startDrag(mode,e));
+    el.addEventListener('touchstart',e=>startDrag(mode,e),{passive:false});
+  });
   window.addEventListener('mousemove',onMove);
   window.addEventListener('touchmove',e=>{if(drag){e.preventDefault();onMove(e);}},{passive:false});
   window.addEventListener('mouseup',end);
@@ -800,9 +805,13 @@ function applyZoneToImage(dataUrl){
         x.moveTo(-hw+r,-hh);x.arcTo(hw,-hh,hw,hh,r);x.arcTo(hw,hh,-hw,hh,r);
         x.arcTo(-hw,hh,-hw,-hh,r);x.arcTo(-hw,-hh,hw,-hh,r);x.closePath();
       }
-      x.fillStyle='rgba(47,148,199,0.78)'; x.fill();          // eau
-      x.lineWidth=Math.max(6,Math.round(nW*0.006));
-      x.strokeStyle='rgba(255,255,255,0.95)'; x.stroke();      // margelle blanche = repère net
+      // Marquage volontairement léger : un aplat trop opaque est parfois conservé par l'IA
+      // comme un « objet » de la scène au lieu d'être remplacé par la piscine.
+      x.fillStyle='rgba(47,148,199,0.55)'; x.fill();
+      x.lineWidth=Math.max(3,Math.round(nW*0.003));
+      x.setLineDash([Math.round(nW*0.02),Math.round(nW*0.012)]);
+      x.strokeStyle='rgba(255,255,255,0.9)'; x.stroke();
+      x.setLineDash([]);
       x.restore();
       resolve(c.toDataURL('image/jpeg',0.92));
     };
@@ -982,7 +991,18 @@ renderHistory();
 
 /* ============ PWA : enregistre le service worker (rend l'app installable avec son logo) ============ */
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  window.addEventListener('load',()=>{
+    // updateViaCache:'none' + update() : force la vérification d'une nouvelle version à chaque ouverture
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'})
+      .then(reg=>{ try{ reg.update(); }catch(_){} })
+      .catch(()=>{});
+    // Quand un nouveau service worker prend la main, recharge une fois pour servir la nouvelle version
+    let swReloaded=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(swReloaded) return; swReloaded=true;
+      if(navigator.serviceWorker.controller) location.reload();
+    });
+  });
 }
 </script>
 </body>
