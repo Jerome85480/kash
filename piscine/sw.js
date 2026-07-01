@@ -2,7 +2,7 @@
 // Sa présence (avec un gestionnaire fetch) rend l'app « installable » : sur Android,
 // Chrome crée alors une vraie icône avec le logo du manifest au lieu d'un raccourci générique.
 // On ne met PAS en cache /api/ (rendu IA + proxy plan) ni les réponses POST.
-const CACHE = 'piscine-av-v4';
+const CACHE = 'piscine-av-v5';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './assets/logo.jpg',
   './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png'];
 

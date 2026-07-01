@@ -96,6 +96,9 @@
     box-shadow:0 0 0 2px rgba(232,115,42,.85),0 6px 18px rgba(11,42,74,.35),inset 0 0 22px rgba(255,255,255,.28);}
   .zh{position:absolute;width:16px;height:16px;background:#e8732a;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.45);}
   .zh.tl{top:-8px;left:-8px;cursor:nw-resize;} .zh.br{bottom:-8px;right:-8px;cursor:se-resize;}
+  .zh.rc{top:-34px;left:50%;margin-left:-11px;width:22px;height:22px;cursor:grab;display:grid;place-items:center;
+    color:#fff;font-size:.72rem;font-weight:700;line-height:1;}
+  #zoneBox .rstem{position:absolute;top:-14px;left:50%;width:2px;height:14px;background:rgba(255,255,255,.9);pointer-events:none;}
   #zoneBox .zlbl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font-size:.68rem;font-weight:700;
     text-shadow:0 1px 4px rgba(11,42,74,.8);white-space:nowrap;pointer-events:none;letter-spacing:.3px;}
   .chg.zone-on{background:var(--orange)!important;color:#fff!important;}
@@ -227,7 +230,7 @@
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
       <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg" id="btnZone" title="Positionner la piscine sur la photo">📍 Position</button><button class="chg del" id="del">Supprimer</button></div>
-      <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zlbl">Zone implantation</div></div></div>
+      <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="rstem"></div><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zh rc" id="zhRot" title="Pivoter">↻</div><div class="zlbl">Zone implantation</div></div></div>
       <div class="model-tag" id="modelTag">
         <img id="modelTagImg" alt="">
         <div class="mt-txt"><b id="modelTagName"></b><span id="modelTagDim"></span></div>
@@ -354,7 +357,7 @@ const AMENAG = [
   {id:'douche', label:'Douche ext.', sw:'#9aa7b0', p:'une douche extérieure design'}
 ];
 
-const state = { photo:null, photoMime:'image/jpeg', model:null, modelImg:null, modelImgP:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null, zone:{active:false,l:0.12,t:0.18,r:0.88,b:0.82}, echelleM:0 };
+const state = { photo:null, photoMime:'image/jpeg', model:null, modelImg:null, modelImgP:null, eau:EAU[0], marg:MARG[0], ter:TER[0], taille:TAILLE[1], options:[], ambiance:AMBIANCE[0], amenag:[], result:null, zone:{active:false,l:0.12,t:0.18,r:0.88,b:0.82,rot:0}, echelleM:0 };
 
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
@@ -597,7 +600,7 @@ function buildPrompt(){
        ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
        : `Conserve la composition et les éléments existants (maison, clôtures, cadrage, format), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
    +(state.zone&&state.zone.active
-       ? `PLACEMENT : une silhouette bleue semi-transparente bordée de blanc est dessinée sur la photo du jardin. Elle indique UNIQUEMENT l'emplacement et l'encombrement approximatif voulus : creuse la piscine à cet endroit, en occupant à peu près cette surface. ATTENTION : la silhouette n'est qu'un repère de position — la FORME, les PROPORTIONS et les détails du bassin (marches, escaliers, arrondis) sont EXCLUSIVEMENT ceux du modèle décrit ci-dessus${withModel?' et visibles dans l\'image 2':''}, PAS ceux de la silhouette. Ne reproduis pas le contour de la silhouette : dessine le vrai modèle. La silhouette ne doit plus apparaître dans le résultat. `
+       ? `PLACEMENT OBLIGATOIRE : une silhouette bleue semi-transparente bordée de blanc est dessinée sur la photo du jardin. La piscine DOIT être creusée EXACTEMENT à l'emplacement de cette silhouette — même position sur la photo, même surface au sol occupée, même ORIENTATION (suis précisément l'axe et l'angle de la silhouette, y compris si elle est inclinée/tournée). INTERDIT de placer la piscine ailleurs ou avec un autre angle. En revanche, la FORME précise du bassin (contour, proportions, marches, arrondis) est celle du modèle décrit ci-dessus${withModel?' et visible dans l\'image 2':''} — pas le contour simplifié de la silhouette. La silhouette dessinée doit être entièrement remplacée par la piscine finale et ne plus apparaître. `
        : '')
    +`FORMAT DE SORTIE : strictement identique à la photo du jardin (même orientation paysage/portrait, même proportions). Résultat haute résolution, sans texte ni filigrane.`;
 }
@@ -680,6 +683,7 @@ function renderZoneBox(){
   const z=state.zone,box=$('#zoneBox');
   box.style.left=(z.l*100)+'%'; box.style.top=(z.t*100)+'%';
   box.style.width=((z.r-z.l)*100)+'%'; box.style.height=((z.b-z.t)*100)+'%';
+  box.style.transform='rotate('+(z.rot||0)+'deg)';
 }
 // Adapte l'apparence de la silhouette au modèle choisi (forme) et aux couleurs (eau, margelles).
 function styleZoneAsPool(){
@@ -699,7 +703,7 @@ function initPoolOverlay(){
     const w=0.60;                                   // largeur : 60% de la photo
     const h=Math.max(0.10,Math.min(0.42, w*ratio*0.55*(dW/dH)));  // raccourci perspective ~0.55
     const l=(1-w)/2, t=Math.min(0.92-h,0.58);       // posée dans le premier plan
-    state.zone={active:true,l,t,r:l+w,b:t+h};
+    state.zone={active:true,l,t,r:l+w,b:t+h,rot:0};
     $('#zoneWrap').style.display='block';
     $('#btnZone').classList.add('zone-on');
   }
@@ -715,38 +719,55 @@ function toggleZone(){
 $('#btnZone').onclick=toggleZone;
 
 (function(){
-  const wrap=$('#zoneWrap'),box=$('#zoneBox'),tl=$('#zhTl'),br=$('#zhBr');
+  const wrap=$('#zoneWrap'),box=$('#zoneBox'),tl=$('#zhTl'),br=$('#zhBr'),rc=$('#zhRot');
   let drag=null;
   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-  function pxy(e){ const r=wrap.getBoundingClientRect(),pt=e.touches?e.touches[0]:e; return{x:(pt.clientX-r.left)/r.width,y:(pt.clientY-r.top)/r.height}; }
-  function startDrag(mode,e){ e.preventDefault();e.stopPropagation(); const p=pxy(e),z=state.zone; drag={mode,sx:p.x,sy:p.y,sl:z.l,st:z.t,sr:z.r,sb:z.b}; }
+  // position du pointeur en PIXELS dans le wrap (nécessaire pour les angles)
+  function ppx(e){ const r=wrap.getBoundingClientRect(),pt=e.touches?e.touches[0]:e;
+    return{px:pt.clientX-r.left,py:pt.clientY-r.top,W:r.width,H:r.height}; }
+  function center(z,W,H){ return{cx:(z.l+z.r)/2*W,cy:(z.t+z.b)/2*H}; }
+  function startDrag(mode,e){
+    e.preventDefault();e.stopPropagation();
+    const p=ppx(e),z=state.zone,c=center(z,p.W,p.H);
+    drag={mode,sx:p.px,sy:p.py,sl:z.l,st:z.t,sr:z.r,sb:z.b,W:p.W,H:p.H,cx:c.cx,cy:c.cy,
+      // pour la rotation : décalage entre l'angle du pointeur et la rotation actuelle
+      a0:(z.rot||0)*Math.PI/180 - Math.atan2(p.py-c.cy,p.px-c.cx)};
+  }
   function onMove(e){
     if(!drag)return;
-    const p=pxy(e),dx=p.x-drag.sx,dy=p.y-drag.sy,z=state.zone,mn=0.06;
-    if(drag.mode==='move'){ const w=drag.sr-drag.sl,h=drag.sb-drag.st; z.l=clamp(drag.sl+dx,0,1-w);z.t=clamp(drag.st+dy,0,1-h);z.r=z.l+w;z.b=z.t+h; }
-    else if(drag.mode==='tl'){ z.l=clamp(drag.sl+dx,0,drag.sr-mn);z.t=clamp(drag.st+dy,0,drag.sb-mn); }
-    else if(drag.mode==='br'){ z.r=clamp(drag.sr+dx,drag.sl+mn,1);z.b=clamp(drag.sb+dy,drag.st+mn,1); }
+    const p=ppx(e),z=state.zone,mn=0.06;
+    if(drag.mode==='move'){
+      const dx=(p.px-drag.sx)/drag.W, dy=(p.py-drag.sy)/drag.H;
+      const w=drag.sr-drag.sl,h=drag.sb-drag.st;
+      z.l=clamp(drag.sl+dx,0,1-w);z.t=clamp(drag.st+dy,0,1-h);z.r=z.l+w;z.b=z.t+h;
+    } else if(drag.mode==='rot'){
+      const a=Math.atan2(p.py-drag.cy,p.px-drag.cx)+drag.a0;
+      z.rot=Math.round(a*180/Math.PI);
+    } else { // tl / br : redimensionnement symétrique autour du centre, projeté dans le repère tourné
+      const rot=(z.rot||0)*Math.PI/180;
+      const dx=p.px-drag.cx, dy=p.py-drag.cy;
+      const lx=Math.abs(dx*Math.cos(-rot)-dy*Math.sin(-rot));   // demi-largeur locale en px
+      const ly=Math.abs(dx*Math.sin(-rot)+dy*Math.cos(-rot));   // demi-hauteur locale en px
+      const w=Math.max(mn,2*lx/drag.W), h=Math.max(mn,2*ly/drag.H);
+      const cxF=drag.cx/drag.W, cyF=drag.cy/drag.H;
+      z.l=clamp(cxF-w/2,0,1);z.r=clamp(cxF+w/2,0,1);
+      z.t=clamp(cyF-h/2,0,1);z.b=clamp(cyF+h/2,0,1);
+    }
     renderZoneBox();
   }
   function end(){ drag=null; }
   box.addEventListener('mousedown',e=>startDrag('move',e));
   tl.addEventListener('mousedown',e=>startDrag('tl',e));
   br.addEventListener('mousedown',e=>startDrag('br',e));
+  rc.addEventListener('mousedown',e=>startDrag('rot',e));
   box.addEventListener('touchstart',e=>startDrag('move',e),{passive:false});
   tl.addEventListener('touchstart',e=>startDrag('tl',e),{passive:false});
   br.addEventListener('touchstart',e=>startDrag('br',e),{passive:false});
+  rc.addEventListener('touchstart',e=>startDrag('rot',e),{passive:false});
   window.addEventListener('mousemove',onMove);
   window.addEventListener('touchmove',e=>{if(drag){e.preventDefault();onMove(e);}},{passive:false});
   window.addEventListener('mouseup',end);
   window.addEventListener('touchend',end);
-  // Redraw zone from scratch by clicking empty area of wrap
-  wrap.addEventListener('mousedown',e=>{
-    if(e.target!==wrap)return;
-    const p=pxy(e),z=state.zone;
-    z.l=p.x;z.t=p.y;z.r=p.x+0.01;z.b=p.y+0.01;
-    drag={mode:'br',sx:p.x,sy:p.y,sl:p.x,st:p.y,sr:p.x+0.01,sb:p.y+0.01};
-    renderZoneBox();
-  });
 })();
 
 // Dessine la silhouette de la piscine (aplat d'eau bleu bordé de blanc, forme du modèle)
@@ -767,16 +788,21 @@ function applyZoneToImage(dataUrl){
       const x=c.getContext('2d');
       x.drawImage(img,0,0);
       const f=((state.model&&state.model.forme)||'').toLowerCase();
+      // rotation autour du centre de la silhouette (l'échelle cover est uniforme → l'angle est conservé)
+      x.save();
+      x.translate(nx+nw/2,ny+nh/2);
+      x.rotate((z.rot||0)*Math.PI/180);
       x.beginPath();
-      if(f.includes('ovale')) x.ellipse(nx+nw/2,ny+nh/2,nw/2,nh/2,0,0,Math.PI*2);
+      if(f.includes('ovale')) x.ellipse(0,0,nw/2,nh/2,0,0,Math.PI*2);
       else{
-        const r=Math.min(nw,nh)*0.18;
-        x.moveTo(nx+r,ny);x.arcTo(nx+nw,ny,nx+nw,ny+nh,r);x.arcTo(nx+nw,ny+nh,nx,ny+nh,r);
-        x.arcTo(nx,ny+nh,nx,ny,r);x.arcTo(nx,ny,nx+nw,ny,r);x.closePath();
+        const r=Math.min(nw,nh)*0.18, hw=nw/2, hh=nh/2;
+        x.moveTo(-hw+r,-hh);x.arcTo(hw,-hh,hw,hh,r);x.arcTo(hw,hh,-hw,hh,r);
+        x.arcTo(-hw,hh,-hw,-hh,r);x.arcTo(-hw,-hh,hw,-hh,r);x.closePath();
       }
       x.fillStyle='rgba(47,148,199,0.78)'; x.fill();          // eau
       x.lineWidth=Math.max(6,Math.round(nW*0.006));
       x.strokeStyle='rgba(255,255,255,0.95)'; x.stroke();      // margelle blanche = repère net
+      x.restore();
       resolve(c.toDataURL('image/jpeg',0.92));
     };
     img.onerror=()=>resolve(dataUrl);
