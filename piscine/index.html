@@ -571,7 +571,7 @@ function buildPrompt(){
   const dim=m.cote?`, dimensions réelles ${m.longueurStr} m × ${m.largeurStr} m${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
   const withModel=!!state.modelImg;   // 2e image = vraie photo du modèle
   const modelNote=withModel
-    ? `L'IMAGE 2 est une VRAIE PHOTO du modèle de piscine exact à installer : reproduis fidèlement sa forme, ses marches/escaliers, la teinte de son eau et ses margelles, en l'intégrant en perspective dans le jardin de l'image 1. `
+    ? `L'IMAGE 2 est une photo de référence du modèle de piscine exact à installer. Copie fidèlement le BASSIN de l'image 2 : sa forme précise, ses marches/escaliers, la teinte de son eau et ses margelles. MAIS ignore TOTALEMENT le décor qui entoure ce bassin dans l'image 2 — sa maison, sa terrasse, sa végétation, ses palmiers, son ciel n'existent pas : AUCUN élément de ce décor ne doit apparaître dans le résultat. La scène finale est EXCLUSIVEMENT celle de l'image 1 (le jardin du client), strictement identique, avec seulement la piscine en plus. `
     : '';
   // Échelle réelle : si l'utilisateur a indiqué une largeur réelle au sol, on aide
   // l'IA à dimensionner la piscine correctement par rapport à la scène.
@@ -580,7 +580,7 @@ function buildPrompt(){
     const pct=Math.round(Math.min(98, (m.longueur/state.echelleM)*100));
     echelleNote=`ÉCHELLE : à l'emplacement de la piscine, la largeur dégagée au sol mesure environ ${state.echelleM} m en réalité ; la piscine (${m.longueurStr} m de long) doit donc occuper environ ${pct}% de cette largeur. Respecte cette échelle réaliste, ni trop grande ni trop petite. `;
   }
-  return `${withModel?'IMAGE 1 = ':''}photographie du jardin d'un client. ÉDITE-la : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
+  return `${withModel?'IMAGE 1 = la photographie du jardin du client : c\'est la SEULE scène de l\'image finale. ':'Photographie du jardin d\'un client. '}ÉDITE cette photo du jardin : insère UNIQUEMENT une piscine creusée dans le sol, sans rien changer d'autre. `
    +`RÈGLE ABSOLUE : conserve l'image du jardin EXACTEMENT telle quelle — même cadrage, même angle, même format, même ciel, même végétation, mêmes bâtiments, mêmes clôtures. N'invente PAS un nouveau jardin. Ne recadre pas, ne passe pas en portrait. `
    +`IMPORTANT sur le sol : ne remplace PAS la surface existante du terrain (gravier, asphalte, terre, herbe…). La piscine est creusée DANS le sol tel qu'il est, pas posée sur une pelouse ajoutée. `
    +modelNote
