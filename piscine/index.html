@@ -597,7 +597,7 @@ function buildPrompt(){
        ? `Ne modifie QUE la zone d'implantation de la piscine ; garde tout le reste de la photo identique. `
        : `Conserve la composition et les éléments existants (maison, clôtures, cadrage, format), mais adapte l'éclairage global de la scène à l'ambiance demandée. `)
    +(state.zone&&state.zone.active
-       ? `PLACEMENT IMPOSÉ : une silhouette de piscine (aplat bleu semi-transparent bordé de blanc) est dessinée sur la photo du jardin. Elle définit l'emplacement, la taille, les proportions et l'orientation EXACTS choisis par le client. Creuse la piscine précisément à cet endroit, avec la MÊME emprise au sol que la silhouette. La silhouette dessinée doit être entièrement remplacée par la piscine photoréaliste finale et ne plus apparaître. `
+       ? `PLACEMENT : une silhouette bleue semi-transparente bordée de blanc est dessinée sur la photo du jardin. Elle indique UNIQUEMENT l'emplacement et l'encombrement approximatif voulus : creuse la piscine à cet endroit, en occupant à peu près cette surface. ATTENTION : la silhouette n'est qu'un repère de position — la FORME, les PROPORTIONS et les détails du bassin (marches, escaliers, arrondis) sont EXCLUSIVEMENT ceux du modèle décrit ci-dessus${withModel?' et visibles dans l\'image 2':''}, PAS ceux de la silhouette. Ne reproduis pas le contour de la silhouette : dessine le vrai modèle. La silhouette ne doit plus apparaître dans le résultat. `
        : '')
    +`FORMAT DE SORTIE : strictement identique à la photo du jardin (même orientation paysage/portrait, même proportions). Résultat haute résolution, sans texte ni filigrane.`;
 }
