@@ -369,7 +369,7 @@
   <footer>
     <b>Piscine Avenue</b> — Pisciniste, La Roche-sur-Yon (Vendée).<br>
     Piscines coque polyester <a href="https://www.generationpiscine.com" target="_blank" rel="noopener">Génération Piscine</a>.
-    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v9</span>
+    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v10</span>
   </footer>
 </div>
 
@@ -658,9 +658,9 @@ function formeDesc(m){
     base=`un bassin de forme ovale arrondie, sans angle, aux deux extrémités demi-circulaires`;
     if(ratio>=1.7) prop=`nettement allongé`;
   } else if(ratio ? ratio<1.2 : f.includes('carr')){
-    base=`un bassin de forme carrée, longueur et largeur quasiment égales, aux angles légèrement arrondis`;
+    base=`un bassin de forme carrée, longueur et largeur quasiment égales`;
   } else {
-    base=`un bassin rectangulaire aux quatre angles légèrement arrondis`;
+    base=`un bassin rectangulaire`;
     if(ratio>=2.1) prop=`nettement allongé (plus de 2 fois plus long que large)`;
     else if(ratio>=1.7) prop=`allongé (environ 2 fois plus long que large)`;
     else if(ratio>=1.35) prop=`aux proportions classiques (environ 1,5 fois plus long que large)`;
@@ -680,7 +680,7 @@ function buildPrompt(){
   const dim=m.cote?`, dimensions réelles ${m.longueurStr} m × ${m.largeurStr} m${m.profondeur?(', profondeur '+m.profondeur):''}`:'';
   const withModel=!!state.modelImg;   // 2e image = vraie photo du modèle
   const modelNote=withModel
-    ? `L'IMAGE 2 est une photo de référence du modèle de piscine exact à installer. Copie fidèlement le BASSIN de l'image 2 : sa forme précise, ses marches/escaliers, la teinte de son eau et ses margelles. MAIS ignore TOTALEMENT le décor qui entoure ce bassin dans l'image 2 — sa maison, sa terrasse, sa végétation, ses palmiers, son ciel n'existent pas : AUCUN élément de ce décor ne doit apparaître dans le résultat. La scène finale est EXCLUSIVEMENT celle de l'image 1 (le jardin du client), strictement identique, avec seulement la piscine en plus. `
+    ? `L'IMAGE 2 est une photo de référence du modèle de piscine exact à installer. Copie fidèlement le BASSIN de l'image 2, avec un luxe de détails : sa forme précise ET le traitement de ses angles (vifs ou arrondis — reproduis exactement ce que montre l'image 2, ne les arrondis pas par défaut), ses éventuels escaliers/marches/banquettes intégrés à l'intérieur du bassin (position, forme), ses éventuelles parois vitrées ou plages immergées, la teinte de son eau et ses margelles. Ne simplifie PAS le bassin en un rectangle basique si l'image 2 montre des aménagements intérieurs particuliers (escalier d'angle, banquette, marches décalées, vitre) : reproduis-les. MAIS ignore TOTALEMENT le décor qui entoure ce bassin dans l'image 2 — sa maison, sa terrasse, sa végétation, ses palmiers, son ciel n'existent pas : AUCUN élément de ce décor ne doit apparaître dans le résultat. La scène finale est EXCLUSIVEMENT celle de l'image 1 (le jardin du client), strictement identique, avec seulement la piscine en plus. `
     : '';
   // Échelle réelle : si l'utilisateur a indiqué une largeur réelle au sol, on aide
   // l'IA à dimensionner la piscine correctement par rapport à la scène.
