@@ -196,6 +196,8 @@
   .btn-pdf{grid-column:1/-1;background:#fff;color:var(--navy);border:1.5px solid var(--line)!important;}
   .btn-pdf:hover{border-color:var(--teal)!important;}
   .btn-share:hover{filter:brightness(1.06);}
+  .btn-adjust{grid-column:1/-1;background:#fff;color:var(--orange);border:1.5px solid var(--orange)!important;}
+  .btn-adjust:hover{background:#fff7f1;}
 
   /* LOADER */
   .loader{display:none;text-align:center;padding:2rem 1rem 1rem;}
@@ -288,7 +290,7 @@
     <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
     <input type="file" id="file" accept="image/*" hidden>
     <div class="preview" id="preview"><img id="previmg" alt="Terrain">
-      <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg" id="btnZone" title="Positionner la piscine sur la photo">📍 Position</button><button class="chg del" id="del">Supprimer</button></div>
+      <div class="prev-actions"><button class="chg" id="chg">Changer</button><button class="chg" id="btnZone" title="Positionner la piscine sur la photo">📍 Position</button><button class="chg" id="btnRegenHere" style="display:none">↻ Régénérer ici</button><button class="chg del" id="del">Supprimer</button></div>
       <div class="zone-wrap" id="zoneWrap" style="display:none"><div id="zoneBox"><div class="rstem"></div><div class="zh tl" id="zhTl"></div><div class="zh br" id="zhBr"></div><div class="zh rm" id="zhRm" title="Largeur"></div><div class="zh bm" id="zhBm" title="Longueur"></div><div class="zh rc" id="zhRot" title="Pivoter">↻</div><div class="zlbl">Zone implantation</div></div><div class="zone-warn" id="zoneWarn">⚠ La piscine dépasse le cadre de la photo</div></div>
       <div class="model-tag" id="modelTag">
         <img id="modelTagImg" alt="">
@@ -352,6 +354,7 @@
         <div class="hdl" id="hdl">⇆</div>
       </div>
       <div class="res-actions">
+        <button class="btn-adjust" id="btnReposition">🔧 Repositionner / redimensionner / pivoter la piscine</button>
         <button class="btn-share" id="share">📤 Envoyer au client</button>
         <button class="btn-dl" id="dl">⬇ Télécharger</button>
         <button class="btn-re" id="regen">↻ Régénérer</button>
@@ -369,7 +372,7 @@
   <footer>
     <b>Piscine Avenue</b> — Pisciniste, La Roche-sur-Yon (Vendée).<br>
     Piscines coque polyester <a href="https://www.generationpiscine.com" target="_blank" rel="noopener">Génération Piscine</a>.
-    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v10</span>
+    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v11</span>
   </footer>
 </div>
 
@@ -443,6 +446,7 @@ $('#chg').onclick=()=>file.click();
 $('#del').onclick=()=>{
   state.photo=null; state.composite=null; file.value=''; fileCam.value='';
   state.zone.active=false; $('#zoneWrap').style.display='none'; $('#btnZone').classList.remove('zone-on');
+  $('#btnRegenHere').style.display='none';
   $('#preview').style.display='none'; drop.style.display='block';
   $('#modelTag').classList.remove('on');
   $('#s1').classList.remove('ok');
@@ -801,7 +805,24 @@ function showResult(){
   $('#result').style.display='block';
   setSlider(50);
   $('#result').scrollIntoView({behavior:'smooth',block:'center'});
+  // Une fois un premier rendu obtenu, on peut ajuster la position/taille/rotation
+  // de la piscine directement depuis la photo et régénérer sans tout reprendre.
+  $('#btnRegenHere').style.display='inline-flex';
+  if(state.zone) $('#modelTag .mt-hint').textContent='Pas satisfait du placement ? Ajustez la piscine bleue puis cliquez sur « Régénérer ici »';
 }
+
+/* Ramène l'utilisateur sur la photo avec la piscine déplaçable/redimensionnable/pivotable
+   active, pour ajuster après avoir vu un premier rendu. */
+$('#btnReposition').onclick=()=>{
+  if(!state.model){ toast('Sélectionnez un modèle pour positionner la piscine.'); return; }
+  state.zone.active=true;
+  $('#zoneWrap').style.display='block';
+  $('#btnZone').classList.add('zone-on');
+  styleZoneAsPool();
+  $('#preview').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('Déplacez, redimensionnez ou pivotez la piscine, puis cliquez sur « Régénérer ici »');
+};
+$('#btnRegenHere').onclick=generate;
 
 /* before/after slider */
 function setSlider(pct){
