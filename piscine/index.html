@@ -369,7 +369,7 @@
   <footer>
     <b>Piscine Avenue</b> — Pisciniste, La Roche-sur-Yon (Vendée).<br>
     Piscines coque polyester <a href="https://www.generationpiscine.com" target="_blank" rel="noopener">Génération Piscine</a>.
-    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v8</span>
+    Rendus générés par IA, à titre indicatif. <span style="opacity:.55">· v9</span>
   </footer>
 </div>
 
@@ -584,8 +584,16 @@ function showModelTag(){
 // convertit en base64. Elle sera envoyée comme 2e image à Gemini : il reproduit ainsi
 // fidèlement la forme/les marches/la teinte d'eau du modèle réel. La promesse est gardée
 // dans state.modelImgP pour que generate() puisse l'attendre.
+// Jeton de sélection : si l'utilisateur clique sur plusieurs modèles à la suite pour
+// comparer, les requêtes réseau peuvent se résoudre dans le désordre (taille d'image,
+// latence variables). Sans garde, la photo de référence d'un modèle PRÉCÉDENT pouvait
+// écraser celle du modèle réellement sélectionné une fois son fetch enfin résolu —
+// l'IA recevait alors le mauvais modèle en image de référence. On n'applique le
+// résultat que si aucune sélection plus récente n'a eu lieu entre-temps.
+let modelImgToken=0;
 function buildComposite(){
   state.modelImg=null;
+  const myToken=++modelImgToken;
   if(!state.model||!state.model.image){ state.modelImgP=null; return; }
   const url='/api/plan?url='+encodeURIComponent(state.model.image);
   state.modelImgP=fetch(url,{cache:'force-cache'})
@@ -593,6 +601,7 @@ function buildComposite(){
     .then(blob=>new Promise((resolve)=>{
       const fr=new FileReader();
       fr.onload=()=>{
+        if(myToken!==modelImgToken){ resolve(null); return; } // sélection dépassée, on ignore
         const dataUrl=fr.result;
         const comma=dataUrl.indexOf(',');
         state.modelImg={ base64:dataUrl.slice(comma+1), mime:(blob.type||'image/jpeg') };
@@ -601,7 +610,7 @@ function buildComposite(){
       fr.onerror=()=>resolve(null);
       fr.readAsDataURL(blob);
     }))
-    .catch(()=>{ state.modelImg=null; return null; });
+    .catch(()=>{ if(myToken===modelImgToken) state.modelImg=null; return null; });
 }
 
 // Choisit le format de sortie Gemini le plus proche des proportions de la photo terrain.
